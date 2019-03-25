@@ -18,6 +18,7 @@ import os.path
 import time
 import yaml
 from sys import exit
+from yaml import load
 import pickle
 import copy
 import json
@@ -37,6 +38,9 @@ def get_args():
     arg_parser.add_argument('-I', '--instance',
                             default='embassy',
                             help='Galaxy server instance name')
+    arg_parser.add_argument('-i', '--yaml-inputs-path',
+                            required=True,
+                            help='Path to Yaml detailing inputs')
     arg_parser.add_argument('-H', '--history',
                             default='',
                             required=True,
@@ -165,6 +169,52 @@ def set_params(json_wf, param_data):
     return params
 
 
+def load_input_files(gi, inputs_yaml, workflow, history):
+    """
+    Loads file in the inputs yaml to the Galaxy instance given. Returns
+    datasets dictionary with names and histories.
+
+    This setup currently doesn't support collections as inputs.
+
+    Input yaml file should be formatted as:
+
+    input_label_a:
+      path: /path/to/file_a
+      type:
+    input_label_b:
+      path: /path/to/file_b
+      type:
+
+    this makes it extensible to support
+    :param gi: the galaxy instance (API object)
+    :param inputs_yaml: path to the yaml file holding the inputs definition.
+    :param workflow: workflow object produced by gi.workflows.show_workflow
+    :param history: the history object to where the files should be uploaded
+    :return: inputs object for invoke_workflow
+    """
+
+    stream = open(inputs_yaml, "r")
+    inputs = yaml.safe_load(stream)
+
+    inputs_for_invoke = {}
+
+    for step, step_data in workflow['steps'].items():
+        if step_data['name'] == "Input dataset":
+            # upload file and record the identifier
+            if step_data['label'] in inputs:
+                upload_res = gi.tools.upload_file(path=inputs[step_data['label']]['path'], history_id=history['id'],
+                                     file_name=step_data['label'],
+                                     file_type=inputs[step_data['label']]['type'])
+                inputs_for_invoke[step] = {
+                        'id': upload_res['outputs'][0]['id'],
+                        'src': 'hda'
+                    }
+            else:
+                raise ValueError("Label % is not present in inputs yaml %" % (step_data['label'], inputs_yaml))
+
+    return inputs_for_invoke
+
+
 def main():
     try:
         args = get_args()
@@ -179,10 +229,6 @@ def main():
         logging.info('Create new history to run workflow ...')
         history = gi.histories.create_history(name=args.history)
 
-        # upload dataset to history
-        logging.info('Uploading dataset to history ...')
-        datasets = upload_datasets_from_folder(gi, args.experimentDir, args.history, history)
-
         # get saved workflow defined in the galaxy instance
         logging.info('Workflow setup ...')
         json_wf = read_json_file(args.workflow)
@@ -190,10 +236,10 @@ def main():
         workflow_id = get_workflow_id(wf = workflow)
         show_wf = gi.workflows.show_workflow(workflow_id)
 
-        # create input datamap dictionary linking uploaded inputs files with workflow inputs
-        logging.info('Datamap linking uploaded inputs and workflow inputs ...')
-        datamap = make_data_map(args.experimentDir, datasets, show_wf)
-
+        # upload dataset to history
+        logging.info('Uploading dataset to history ...')
+        datamap = load_input_files(gi, inputs_yaml=args.yaml_inputs_path,
+                                   workflow=show_wf, history=history)
         # set parameters
         logging.info('Set parameters ...')
         param_data = read_json_file(args.parameters)
