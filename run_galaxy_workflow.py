@@ -35,7 +35,7 @@ def get_args():
                             default='',
                             required=True,
                             help='Path to experiment directory folder')
-    arg_parser.add_argument('-I', '--instance',
+    arg_parser.add_argument('-G', '--galaxy-instance',
                             default='embassy',
                             help='Galaxy server instance name')
     arg_parser.add_argument('-i', '--yaml-inputs-path',
@@ -222,7 +222,7 @@ def main():
 
         # Prepare environment
         logging.info('Prepare galaxy environment ...')
-        ins = get_instance(args.conf, name=args.instance)
+        ins = get_instance(args.conf, name=args.galaxy_instance)
         gi = GalaxyInstance(ins['url'], key=ins['key'])
 
         # Create new history to run workflow
