@@ -1,25 +1,29 @@
 #!/usr/bin/env python
 """run_galaxy_workflow
+
+This script run workflows on galaxy instance using credentials.yml file provided.
+The input data (barcodes.tsv, genes.tsv, matrix.mtx and gtf) files are upload from
+provisioned locally in a directory. This scripts connects to galaxy instance and select the workflow of interest.
+
+running syntax
+
+python run_galaxy_workflow.py -C galaxy_credentials.yml -D E-MTAB-101 -I 'embassy' -H 'scanpy_param_test' -W Galaxy-Workflow-Scanpy_default_params.json -P scanpy_param_pretty.json
+
+E-MTAB-101 the experiment directory contains barcodes.tsv, genes.tsv, matrix.mtx and gtf.gz
 """
-## This script run workflows on galaxy instance using credentials.yml file provided.
-## The input data (barcodes.tsv, genes.tsv, matrix.mtx and gtf) files are upload from
-##  provisioned locally in a directory. This scripts connects to galaxy instance and select the workflow of interest.
-
-## running syntax
-## python run_galaxy_workflow.py -C galaxy_credentials.yml -D E-MTAB-101 -I 'embassy' -H 'scanpy_param_test' -W Galaxy-Workflow-Scanpy_default_params.json -P scanpy_param_pretty.json
-
-## E-MTAB-101 the experiment directory contains barcodes.tsv, genes.tsv, matrix.mtx and gtf.gz
 
 import argparse
 import logging
 import os.path
 import time
 import yaml
-import sys
+from sys import exit
 import pickle
 import copy
 import json
 from bioblend.galaxy import GalaxyInstance
+
+
 
 def get_args():
     arg_parser = argparse.ArgumentParser()
@@ -56,7 +60,7 @@ def get_args():
 def set_logging_level(debug=False):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
-        format=('%(asctime)s - %(message)s'),
+        format= '%(asctime)s - %(message)s',
         datefmt='%d-%m-%y %H:%M:%S')
 
 
@@ -75,19 +79,24 @@ def get_workflow_from_file(gi, workflow_file):
     import_workflow = [gi.workflows.import_workflow_from_local_path(file_local_path = workflow_file)]
     return import_workflow
 
+
+
 def read_json_file(json_file_path):
     with open(json_file_path) as json_file:
         json_obj = json.load(json_file)
     return json_obj
 
+
 def get_workflow_from_name(gi, workflow_name):
     wf = gi.workflows.get_workflows(name=workflow_name)
     return wf
 
+
 def get_history_id(history_name, histories_obj):
     for hist_dict in histories_obj:
         if hist_dict['name'] == history_name:
-            return(hist_dict['id'])
+            return hist_dict['id']
+
 
 def upload_datasets_from_folder(gi, experimentDir, history_name, history):
     if os.path.exists(experimentDir):
@@ -107,10 +116,12 @@ def upload_datasets_from_folder(gi, experimentDir, history_name, history):
         datasets.append(data.items())
     return datasets
 
+
 def get_workflow_id(wf):
     for wf_dic in wf:
         wf_id = wf_dic['id']
     return wf_id
+
 
 def get_input_data_id(file, wf):
     file_name = os.path.splitext(file)[0]
@@ -118,6 +129,7 @@ def get_input_data_id(file, wf):
         if wf['inputs'][id]['label'] == file_name:
             input_id = id
     return input_id
+
 
 def make_data_map(experimentDir, datasets, show_workflow):
     datamap = {}
@@ -142,6 +154,7 @@ def download_results(gi, results, experimentDir):
     ok_state_ids = results_hid['state_ids']['ok']
     for state_id in ok_state_ids:
         gi.datasets.download_dataset(state_id, file_path=experimentDir, use_default_filename=True)
+
 
 def set_params(json_wf, param_data):
     params = {}
@@ -201,7 +214,7 @@ def main():
         # get_run_state
         state = get_run_state(gi, results)
 
-       # wait until the jobs are completed
+        # wait until the jobs are completed
         while state == 'queued':
             state = get_run_state(gi, results)
             if state == 'queued':
@@ -214,10 +227,10 @@ def main():
         # Download results
         logging.info('Downloading results ...')
         download_results(gi, results, experimentDir = args.experimentDir)
-        sys.exit(0)
-
+        exit(0)
     except:
-         sys.exit(1)
+        exit(1)
+
 
 if __name__ == '__main__':
     main()
