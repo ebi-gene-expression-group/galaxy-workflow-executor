@@ -131,7 +131,7 @@ def download_results(gi, results, experimentDir):
 def set_params(json_wf, param_data):
     params = {}
     for param_step_name in param_data:
-        step_ids = (key for key, value in json_wf['steps'].iteritems() if value['label'] == str(param_step_name))
+        step_ids = (key for key, value in json_wf['steps'].items() if value['label'] == str(param_step_name))
         for step_id in step_ids:
             params.update({step_id: param_data[param_step_name]})
     return params
