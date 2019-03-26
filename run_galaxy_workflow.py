@@ -83,7 +83,6 @@ def get_workflow_from_file(gi, workflow_file):
     return import_workflow
 
 
-
 def read_json_file(json_file_path):
     with open(json_file_path) as json_file:
         json_obj = json.load(json_file)
