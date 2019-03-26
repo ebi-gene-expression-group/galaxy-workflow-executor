@@ -166,19 +166,18 @@ def load_input_files(gi, inputs_yaml, workflow, history):
 
     inputs_for_invoke = {}
 
-    for step, step_data in workflow['steps'].items():
-        if step_data['name'] == "Input dataset":
-            # upload file and record the identifier
-            if step_data['label'] in inputs:
-                upload_res = gi.tools.upload_file(path=inputs[step_data['label']]['path'], history_id=history['id'],
-                                     file_name=step_data['label'],
-                                     file_type=inputs[step_data['label']]['type'])
-                inputs_for_invoke[step] = {
-                        'id': upload_res['outputs'][0]['id'],
-                        'src': 'hda'
-                    }
-            else:
-                raise ValueError("Label % is not present in inputs yaml %" % (step_data['label'], inputs_yaml))
+    for step, step_data in workflow['inputs'].items():
+        # upload file and record the identifier
+        if step_data['label'] in inputs:
+            upload_res = gi.tools.upload_file(path=inputs[step_data['label']]['path'], history_id=history['id'],
+                                 file_name=step_data['label'],
+                                 file_type=inputs[step_data['label']]['type'])
+            inputs_for_invoke[step] = {
+                    'id': upload_res['outputs'][0]['id'],
+                    'src': 'hda'
+                }
+        else:
+            raise ValueError("Label % is not present in inputs yaml %" % (step_data['label'], inputs_yaml))
 
     return inputs_for_invoke
 
