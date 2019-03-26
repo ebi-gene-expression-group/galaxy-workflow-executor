@@ -7,7 +7,7 @@ provisioned locally in a directory. This scripts connects to galaxy instance and
 
 running syntax
 
-python run_galaxy_workflow.py -C galaxy_credentials.yml -D E-MTAB-101 -I 'embassy' -H 'scanpy_param_test' -W Galaxy-Workflow-Scanpy_default_params.json -P scanpy_param_pretty.json
+python run_galaxy_workflow.py -C galaxy_credentials.yml -o output_dir -I 'embassy' -H 'scanpy_param_test' -W Galaxy-Workflow-Scanpy_default_params.json -P scanpy_param_pretty.json
 
 E-MTAB-101 the experiment directory contains barcodes.tsv, genes.tsv, matrix.mtx and gtf.gz
 """
@@ -31,16 +31,15 @@ def get_args():
     arg_parser.add_argument('-C', '--conf',
                             required=True,
                             help='A yaml file describing the galaxy credentials')
-    arg_parser.add_argument('-D', '--experimentDir',
-                            default='',
-                            required=True,
-                            help='Path to experiment directory folder')
     arg_parser.add_argument('-G', '--galaxy-instance',
                             default='embassy',
                             help='Galaxy server instance name')
     arg_parser.add_argument('-i', '--yaml-inputs-path',
                             required=True,
                             help='Path to Yaml detailing inputs')
+    arg_parser.add_argument('-o', '--output-dir',
+                            default="./",
+                            help='Path to output directory')
     arg_parser.add_argument('-H', '--history',
                             default='',
                             required=True,
@@ -102,25 +101,6 @@ def get_history_id(history_name, histories_obj):
             return hist_dict['id']
 
 
-def upload_datasets_from_folder(gi, experimentDir, history_name, history):
-    if os.path.exists(experimentDir):
-        expAcc = os.path.basename(experimentDir)
-        files = os.listdir(experimentDir)
-        history_id = history['id']
-
-    # uploading each file from the experiment directory to a history id
-    # and record appended files history
-    datasets = []
-    for file in files:
-        print "Uploading %s ..." %(file)
-        file_type = file.split(".")[-1]
-        if file_type == 'mtx' or file_type == 'gz':
-            file_type = 'auto'
-        data = gi.tools.upload_file(path=os.path.join(experimentDir,file), history_id = history_id, file_name = file, file_type = file_type)
-        datasets.append(data.items())
-    return datasets
-
-
 def get_workflow_id(wf):
     for wf_dic in wf:
         wf_id = wf_dic['id']
@@ -133,18 +113,6 @@ def get_input_data_id(file, wf):
         if wf['inputs'][id]['label'] == file_name:
             input_id = id
     return input_id
-
-
-def make_data_map(experimentDir, datasets, show_workflow):
-    datamap = {}
-    files = os.listdir(experimentDir)
-    for file in files:
-        for idx, hist_dict in enumerate(datasets):
-            if datasets[idx][0][1][0]['name'] == file:
-                input_data_id = get_input_data_id(file, show_workflow)
-                datamap[input_data_id] = { 'src':'hda', 'id': get_history_id(file, datasets[idx][0][1]) }
-    if isinstance(datamap, dict):
-        return(datamap)
 
 
 def get_run_state(gi, results):
@@ -250,7 +218,7 @@ def main():
                                                params = params,
                                                history_name = (args.history + '_results'))
 
-        binary_file = open(os.path.join(args.experimentDir, args.history + '_results.bin'), mode = 'wb')
+        binary_file = open(os.path.join(args.output_directory, args.history + '_results.bin'), mode = 'wb')
         pickle.dump(results, binary_file)
         binary_file.close()
 
@@ -272,7 +240,7 @@ def main():
 
         # Download results
         logging.info('Downloading results ...')
-        download_results(gi, results, experimentDir = args.experimentDir)
+        download_results(gi, results, experimentDir=args.output_directory)
         exit(0)
     except:
         exit(1)
