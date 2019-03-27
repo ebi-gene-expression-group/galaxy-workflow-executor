@@ -254,22 +254,28 @@ def main():
         time.sleep(100)
 
         # get_run_state
-        state = get_run_state(gi, results)
+        results_hid = gi.histories.show_history(results['history_id'])
+        state = results_hid['state']
 
         # wait until the jobs are completed
-        logging.debug("Got state...")
-        while state == 'queued':
-            state = get_run_state(gi, results)
-            if state == 'queued':
-                time.sleep(10)
-                continue
+        logging.debug("Got state: {}".format(state))
+        while True:
+            logging.debug("Got state: {}".format(state))
+            if state == 'error':
+                logging.error("Execution failed, see {}/histories/show_structure?__identifer={} for details. "
+                              "You might require login with a particular user.".
+                              format(gi.base_url, results_hid['id']))
+                exit(1)
             elif state == 'ok':
-                logging.info("jobs ok")
+                logging.info("Workflow finished successfully ok")
                 break
+            time.sleep(10)
+            results_hid = gi.histories.show_history(results['history_id'])
+            state = results_hid['state']
 
         # Download results
         logging.info('Downloading results ...')
-        download_results(gi, results, experimentDir=args.output_directory)
+        download_results(gi, results, experimentDir=args.output_dir)
         exit(0)
     except Exception as e:
         logging.error("Failed due to {}".format(str(e)))
