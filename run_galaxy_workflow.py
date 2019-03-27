@@ -180,10 +180,30 @@ def load_input_files(gi, inputs_yaml, workflow, history):
     return inputs_for_invoke
 
 
+def validate_labels(wf_from_json, param_data, exit_on_error=True):
+    step_labels_wf = []
+    for step_id, step_content in wf_from_json['steps'].items():
+        if step_content['label'] is None:
+            logging.warning("Step No {} in json workflow does not have a label, parameters are not mappable there.".format(step_id))
+        step_labels_wf.append(step_content['label'])
+    for step_label_p, params in param_data.items():
+        if step_label_p not in step_labels_wf:
+            if exit_on_error:
+                raise ValueError(
+                    " '{}' parameter step label is not present in the workflow definition".format(step_label_p))
+            logging.error("{} parameter step label is not present in the workflow definition".format(step_label_p))
+    logging.info("Validation of labels: OK")
+
+
 def main():
     try:
         args = get_args()
         set_logging_level(args.debug)
+
+        # Load workflows and parameters, validate
+        wf_from_json = read_json_file(args.workflow)
+        param_data = read_json_file(args.parameters)
+        validate_labels(wf_from_json, param_data)
 
         # Prepare environment
         logging.info('Prepare galaxy environment ...')
@@ -196,9 +216,8 @@ def main():
 
         # get saved workflow defined in the galaxy instance
         logging.info('Workflow setup ...')
-        json_wf = read_json_file(args.workflow)
-        workflow = get_workflow_from_file(gi, workflow_file = args.workflow)
-        workflow_id = get_workflow_id(wf = workflow)
+        workflow = get_workflow_from_file(gi, workflow_file=args.workflow)
+        workflow_id = get_workflow_id(wf=workflow)
         show_wf = gi.workflows.show_workflow(workflow_id)
 
         # upload dataset to history
@@ -207,8 +226,6 @@ def main():
                                    workflow=show_wf, history=history)
         # set parameters
         logging.info('Set parameters ...')
-        param_data = read_json_file(args.parameters)
-        params = set_params(json_wf, param_data)
 
         logging.info('Running workflow ...')
         results = gi.workflows.invoke_workflow(workflow_id = workflow_id, inputs = datamap,
@@ -218,6 +235,8 @@ def main():
         binary_file = open(os.path.join(args.output_directory, args.history + '_results.bin'), mode = 'wb')
         pickle.dump(results, binary_file)
         binary_file.close()
+        params = set_params(wf_from_json, param_data)
+
 
         # wait for a little while and check if the status is ok
         time.sleep(100)
