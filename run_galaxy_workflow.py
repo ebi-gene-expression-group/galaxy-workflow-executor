@@ -18,7 +18,6 @@ import os.path
 import time
 import yaml
 from sys import exit
-from yaml import load
 import pickle
 import copy
 import json
@@ -79,7 +78,7 @@ def get_instance(conf, name='__default'):
 
 
 def get_workflow_from_file(gi, workflow_file):
-    import_workflow = [gi.workflows.import_workflow_from_local_path(file_local_path = workflow_file)]
+    import_workflow = [gi.workflows.import_workflow_from_local_path(file_local_path=workflow_file)]
     return import_workflow
 
 
@@ -240,7 +239,8 @@ def main():
         logging.info('Downloading results ...')
         download_results(gi, results, experimentDir=args.output_directory)
         exit(0)
-    except:
+    except Exception as e:
+        logging.error("Failed due to {}".format(str(e)))
         exit(1)
 
 
