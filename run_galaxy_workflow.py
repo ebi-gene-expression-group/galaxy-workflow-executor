@@ -62,13 +62,13 @@ def get_args():
 def set_logging_level(debug=False):
     logging.basicConfig(
         level=logging.DEBUG if debug else logging.INFO,
-        format= '%(asctime)s - %(message)s',
+        format='%(asctime)s - %(message)s',
         datefmt='%d-%m-%y %H:%M:%S')
 
 
 def get_instance(conf, name='__default'):
     with open(os.path.expanduser(conf), mode='r') as fh:
-        data = yaml.load(fh)
+        data = yaml.safe_load(fh)
     assert name in data, 'unknown instance'
     entry = data[name]
     if isinstance(entry, dict):
