@@ -226,25 +226,38 @@ def main():
                                    workflow=show_wf, history=history)
         # set parameters
         logging.info('Set parameters ...')
-
-        logging.info('Running workflow ...')
-        results = gi.workflows.invoke_workflow(workflow_id = workflow_id, inputs = datamap,
-                                               params = params,
-                                               history_name = (args.history + '_results'))
-
-        binary_file = open(os.path.join(args.output_directory, args.history + '_results.bin'), mode = 'wb')
-        pickle.dump(results, binary_file)
-        binary_file.close()
         params = set_params(wf_from_json, param_data)
 
+        try:
+            logging.info('Running workflow ...')
+            results = gi.workflows.invoke_workflow(workflow_id=workflow_id,
+                                               inputs=datamap,
+                                               params=params,
+                                               history_name=(args.history + '_results'))
+        except Exception as ce:
+            logging.error("Failure when invoking invoke workflows: {}".format(str(ce)))
+            print(str(ce))
+            exit(1)
+
+        logging.debug("About to start serialization...")
+        try:
+            res_file_path = os.path.join(args.output_dir, args.history + '_results.bin')
+            binary_file = open(res_file_path, mode='wb')
+            pickle.dump(results, binary_file)
+            binary_file.close()
+            logging.info("State serialized for recovery at {}".format(str(res_file_path)))
+        except Exception as e:
+            logging.error("Failed to serialize (skipping)... {}".format(str(e)))
 
         # wait for a little while and check if the status is ok
+        logging.debug("Sleeping for 100 s now...")
         time.sleep(100)
 
         # get_run_state
         state = get_run_state(gi, results)
 
         # wait until the jobs are completed
+        logging.debug("Got state...")
         while state == 'queued':
             state = get_run_state(gi, results)
             if state == 'queued':
