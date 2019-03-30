@@ -135,7 +135,7 @@ def set_params(json_wf, param_data):
     return params
 
 
-def load_input_files(gi, inputs_yaml, workflow, history):
+def load_input_files(gi, inputs, workflow, history):
     """
     Loads file in the inputs yaml to the Galaxy instance given. Returns
     datasets dictionary with names and histories.
@@ -153,14 +153,11 @@ def load_input_files(gi, inputs_yaml, workflow, history):
 
     this makes it extensible to support
     :param gi: the galaxy instance (API object)
-    :param inputs_yaml: path to the yaml file holding the inputs definition.
+    :param inputs: dictionary of inputs as read from the inputs YAML file
     :param workflow: workflow object produced by gi.workflows.show_workflow
     :param history: the history object to where the files should be uploaded
     :return: inputs object for invoke_workflow
     """
-
-    stream = open(inputs_yaml, "r")
-    inputs = yaml.safe_load(stream)
 
     inputs_for_invoke = {}
 
@@ -181,6 +178,17 @@ def load_input_files(gi, inputs_yaml, workflow, history):
 
 
 def validate_labels(wf_from_json, param_data, exit_on_error=True):
+    """
+    Checks that all workflow steps have labels (although if not the case, it will only
+    warn that those steps won't be configurable for parameters) and that all step labels
+    in the parameter files exist in the workflow file. If the second case is not true,
+    the offending parameter is shown and the program exists.
+
+    :param wf_from_json:
+    :param param_data:
+    :param exit_on_error:
+    :return:
+    """
     step_labels_wf = []
     for step_id, step_content in wf_from_json['steps'].items():
         if step_content['label'] is None:
@@ -195,15 +203,66 @@ def validate_labels(wf_from_json, param_data, exit_on_error=True):
     logging.info("Validation of labels: OK")
 
 
+def validate_input_labels(wf_json, inputs):
+    """
+    Check that all input datasets in the workflow have labels, and that those labels are available in the inputs yaml.
+    Raises an exception if those cases are not fulfilled.
+
+    :param wf_json:
+    :param inputs:
+    :return:
+    """
+
+    for step, step_content in wf_json['steps'].items():
+        if step_content['type'] == 'data_input':
+            if step_content['label'] is None:
+                raise ValueError("Input step {} in workflow has no label set.".format(str(step)))
+
+            if step_content['label'] not in inputs:
+                raise ValueError("Input step {} label {} is not present in the inputs YAML file provided."
+                                 .format(str(step), step_content['label']))
+
+
+def read_yaml_file(yaml_path):
+    """
+    Reads a YAML file safely.
+
+    :param yaml_path:
+    :return: dictionary object from YAML content.
+    """
+    stream = open(yaml_path, "r")
+    return yaml.safe_load(stream)
+
+
+def validate_file_exists(inputs):
+    """
+    Checks that paths exists in the local file system
+
+    :param inputs: dictionary with inputs
+    :return:
+    """
+    for input_key, input_content in inputs.items():
+        if 'path' in input_content and not os.path.isfile(input_content['path']):
+            raise ValueError("Input file {} does not exist for input label {}".format(input_content['path'], input_key))
+
+
+
+
+
 def main():
     try:
         args = get_args()
         set_logging_level(args.debug)
 
-        # Load workflows and parameters, validate
+        # Load workflows, inputs and parameters
         wf_from_json = read_json_file(args.workflow)
         param_data = read_json_file(args.parameters)
+        inputs_data = read_yaml_file(args.yaml_inputs_path)
+
+        # Validate data before talking to Galaxy
         validate_labels(wf_from_json, param_data)
+        validate_input_labels(wf_json=wf_from_json, inputs=inputs_data)
+        validate_file_exists(inputs_data)
 
         # Prepare environment
         logging.info('Prepare galaxy environment ...')
