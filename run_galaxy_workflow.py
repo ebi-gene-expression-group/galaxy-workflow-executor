@@ -278,7 +278,7 @@ def main():
 
         # upload dataset to history
         logging.info('Uploading dataset to history ...')
-        datamap = load_input_files(gi, inputs=args.yaml_inputs_path,
+        datamap = load_input_files(gi, inputs=inputs_data,
                                    workflow=show_wf, history=history)
         # set parameters
         logging.info('Set parameters ...')
