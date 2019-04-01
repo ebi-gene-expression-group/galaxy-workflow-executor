@@ -126,7 +126,12 @@ def get_run_state(gi, results):
 def download_results(gi, results, output_dir):
     datasets = gi.histories.show_history(results['history_id'], contents=True, visible=True)
     for dataset in datasets:
-        gi.datasets.download_dataset(dataset['id'], file_path=output_dir, use_default_filename=True)
+        try:
+            gi.datasets.download_dataset(dataset['id'], file_path=output_dir, use_default_filename=True)
+        except Exception as e:
+            logging.warning("Skipping download of dataset '{}': {}".format(dataset['name'], str(e)))
+
+
 
 
 def set_params(json_wf, param_data):
