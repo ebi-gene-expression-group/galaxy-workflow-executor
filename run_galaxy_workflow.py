@@ -124,14 +124,15 @@ def get_run_state(gi, results):
 
 
 def download_results(gi, results, output_dir):
-    datasets = gi.histories.show_history(results['history_id'], contents=True, visible=True)
+    datasets = gi.histories.show_history(results['history_id'],
+                                         contents=True,
+                                         visible=True, details='all')
     for dataset in datasets:
-        try:
+        if dataset['type'] == 'file':
             gi.datasets.download_dataset(dataset['id'], file_path=output_dir, use_default_filename=True)
-        except Exception as e:
-            logging.warning("Skipping download of dataset '{}': {}".format(dataset['name'], str(e)))
-
-
+        elif dataset['type'] == 'collection':
+            for ds_in_coll in dataset['elements']:
+                gi.datasets.download_dataset(ds_in_coll['object']['id'], file_path=output_dir, use_default_filename=True)
 
 
 def set_params(json_wf, param_data):
