@@ -123,11 +123,10 @@ def get_run_state(gi, results):
     return state
 
 
-def download_results(gi, results, experimentDir):
-    results_hid = gi.histories.show_history(results['history_id'])
-    ok_state_ids = results_hid['state_ids']['ok']
-    for state_id in ok_state_ids:
-        gi.datasets.download_dataset(state_id, file_path=experimentDir, use_default_filename=True)
+def download_results(gi, results, output_dir):
+    datasets = gi.histories.show_history(results['history_id'], contents=True, visible=True)
+    for dataset in datasets:
+        gi.datasets.download_dataset(dataset['id'], file_path=output_dir, use_default_filename=True)
 
 
 def set_params(json_wf, param_data):
@@ -329,13 +328,14 @@ def main():
             elif state == 'ok':
                 logging.info("Workflow finished successfully ok")
                 break
+            # TODO downloads could be triggered here to gain time.
             time.sleep(10)
             results_hid = gi.histories.show_history(results['history_id'])
             state = results_hid['state']
 
         # Download results
         logging.info('Downloading results ...')
-        download_results(gi, results, experimentDir=args.output_dir)
+        download_results(gi, results, output_dir=args.output_dir)
         logging.info('Results available.')
 
         if not args.keep_histories:
