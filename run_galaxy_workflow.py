@@ -172,7 +172,7 @@ def load_input_files(gi, inputs, workflow, history):
                     'src': 'hda'
                 }
         else:
-            raise ValueError("Label % is not present in inputs yaml %" % (step_data['label'], inputs_yaml))
+            raise ValueError("Label % is not present in inputs yaml %" % (step_data['label'], inputs))
 
     return inputs_for_invoke
 
