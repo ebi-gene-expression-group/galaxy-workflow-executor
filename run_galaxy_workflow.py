@@ -55,6 +55,10 @@ def get_args():
                             action='store_true',
                             default=False,
                             help='Print debug information')
+    arg_parser.add_argument('-k', '--keep-histories',
+                            action='store_true',
+                            default=False,
+                            help="Keeps histories created, they will be purged if not.")
     args = arg_parser.parse_args()
     return args
 
@@ -332,6 +336,14 @@ def main():
         # Download results
         logging.info('Downloading results ...')
         download_results(gi, results, experimentDir=args.output_dir)
+        logging.info('Results available.')
+
+        if not args.keep_histories:
+            logging.info('Deleting histories...')
+            gi.histories.delete_history(results['history_id'], purge=True)
+            gi.histories.delete_history(history['id'], purge=True)
+            logging.info('Histories purged...')
+
         exit(0)
     except Exception as e:
         logging.error("Failed due to {}".format(str(e)))
