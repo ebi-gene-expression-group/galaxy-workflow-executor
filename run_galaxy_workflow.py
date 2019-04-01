@@ -289,7 +289,7 @@ def main():
         params = set_params(wf_from_json, param_data)
 
         try:
-            logging.info('Running workflow ...')
+            logging.info('Running workflow {}...'.format(show_wf['name']))
             results = gi.workflows.invoke_workflow(workflow_id=workflow_id,
                                                inputs=datamap,
                                                params=params,
