@@ -246,9 +246,6 @@ def validate_file_exists(inputs):
             raise ValueError("Input file {} does not exist for input label {}".format(input_content['path'], input_key))
 
 
-
-
-
 def main():
     try:
         args = get_args()
