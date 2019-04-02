@@ -125,16 +125,41 @@ def get_run_state(gi, results):
     return state
 
 
-def download_results(gi, results, output_dir):
-    datasets = gi.histories.show_history(results['history_id'],
+def download_results(gi, history_id, output_dir, use_names=False):
+    """
+    Downloads results from a given Galaxy instance and history to a specified filesystem location.
+
+    :param gi: galaxy instance object
+    :param history_id: ID of the history from where results should be retrieved.
+    :param output_dir: path to where result file should be written.
+    :param use_names: whether to trust or not the internal Galaxy name for the final file name
+    :return:
+    """
+    datasets = gi.histories.show_history(history_id,
                                          contents=True,
                                          visible=True, details='all')
+    used_names = {}
     for dataset in datasets:
         if dataset['type'] == 'file':
-            gi.datasets.download_dataset(dataset['id'], file_path=output_dir, use_default_filename=True)
+            if use_names and dataset['name'] is not None and dataset['name'] not in used_names:
+                gi.datasets.download_dataset(dataset['id'], file_path=output_dir+"/"+dataset['name'],
+                                             use_default_filename=False)
+                used_names.add(dataset['name'])
+            else:
+                gi.datasets.download_dataset(dataset['id'],
+                                             file_path=output_dir,
+                                             use_default_filename=True)
         elif dataset['type'] == 'collection':
             for ds_in_coll in dataset['elements']:
-                gi.datasets.download_dataset(ds_in_coll['object']['id'], file_path=output_dir, use_default_filename=True)
+                if use_names and ds_in_coll['object']['name'] is not None and ds_in_coll['object']['name'] not in used_names:
+                    gi.datasets.download_dataset(ds_in_coll['object']['id'],
+                                                 file_path=output_dir+"/"+ds_in_coll['object']['name'],
+                                                 use_default_filename=False)
+                    used_names.add(ds_in_coll['object']['name'])
+                else:
+                    gi.datasets.download_dataset(ds_in_coll['object']['id'],
+                                                 file_path=output_dir,
+                                                 use_default_filename=True)
 
 
 def set_params(json_wf, param_data):
@@ -377,7 +402,9 @@ def main():
 
         # Download results
         logging.info('Downloading results ...')
-        download_results(gi, results, output_dir=args.output_dir)
+        download_results(gi, history_id=results['history_id'],
+                         output_dir=args.output_dir,
+                         use_names=True)
         logging.info('Results available.')
 
         if not args.keep_histories:
