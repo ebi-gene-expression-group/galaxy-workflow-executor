@@ -258,6 +258,37 @@ def validate_file_exists(inputs):
             raise ValueError("Input file {} does not exist for input label {}".format(input_content['path'], input_key))
 
 
+def produce_versions_file(gi, workflow_from_json, path):
+    """
+    Produces a tool versions file for the workflow run.
+
+    :param gi:
+    :param workflow_from_json:
+    :return:
+    """
+
+    tools_dict = []
+
+    f = open(file=path, mode="w")
+    f.write("\t".join(["Analysis", "Software", "Version", "Citation"]))
+
+    for key, step in sorted(workflow_from_json['steps'].items(), reverse=True):
+        # Input steps won't have tool ids, and we only need each tool once.
+        if step['tool_id'] is not None and step['tool_id'] not in tools_dict:
+            tool = gi.tools.show_tool(step['tool_id'])
+            label = step['label'] if step['label'] is not None else tool['name']
+            url = ""
+            if tool['tool_shed_repository'] is not None:
+                ts_meta = tool['tool_shed_repository']
+                url = "https://{}/view/{}/{}/{}".format(ts_meta['tool_shed'], ts_meta['owner'], ts_meta['name'], ts_meta['changeset_revision'])
+            f.write("\t".join([label, tool['name'], tool['version'], url])+"\n")
+            tools_dict.append(step['tool_id'])
+            # tools_dict[step['tool_id']] = {'name': tool['name'], 'version': tool['version']}
+    f.flush()
+    f.close()
+
+
+
 def main():
     try:
         args = get_args()
@@ -316,6 +347,10 @@ def main():
             logging.info("State serialized for recovery at {}".format(str(res_file_path)))
         except Exception as e:
             logging.error("Failed to serialize (skipping)... {}".format(str(e)))
+
+        # Produce tool versions file
+        produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
+                              path="{}/software_versions_galaxy.txt".format(args.output_dir))
 
         # wait for a little while and check if the status is ok
         logging.debug("Sleeping for 100 s now...")
