@@ -294,7 +294,7 @@ def produce_versions_file(gi, workflow_from_json, path):
     tools_dict = []
 
     f = open(file=path, mode="w")
-    f.write("\t".join(["Analysis", "Software", "Version", "Citation"]))
+    f.write("\t".join(["Analysis", "Software", "Version", "Citation"])+"\n")
 
     for key, step in sorted(workflow_from_json['steps'].items(), reverse=True):
         # Input steps won't have tool ids, and we only need each tool once.
