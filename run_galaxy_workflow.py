@@ -138,7 +138,7 @@ def download_results(gi, history_id, output_dir, use_names=False):
     datasets = gi.histories.show_history(history_id,
                                          contents=True,
                                          visible=True, details='all')
-    used_names = {}
+    used_names = set()
     for dataset in datasets:
         if dataset['type'] == 'file':
             if use_names and dataset['name'] is not None and dataset['name'] not in used_names:
