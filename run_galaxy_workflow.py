@@ -59,6 +59,9 @@ def get_args():
                             action='store_true',
                             default=False,
                             help="Keeps histories created, they will be purged if not.")
+    arg_parser.add_argument('-w', '--keep-workflow',
+                            default=False,
+                            help="Keeps workflow created, it will be purged if not.")
     args = arg_parser.parse_args()
     return args
 
@@ -349,6 +352,11 @@ def main():
             gi.histories.delete_history(results['history_id'], purge=True)
             gi.histories.delete_history(history['id'], purge=True)
             logging.info('Histories purged...')
+
+        if not args.keep_workflow:
+            logging.info('Deleting workflow...')
+            gi.workflows.delete_workflow(workflow_id=workflow_id)
+            logging.info('Workflow deleted.')
 
         exit(0)
     except Exception as e:
