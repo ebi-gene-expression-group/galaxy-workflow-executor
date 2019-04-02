@@ -24,7 +24,6 @@ import json
 from bioblend.galaxy import GalaxyInstance
 
 
-
 def get_args():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('-C', '--conf',
@@ -288,7 +287,6 @@ def produce_versions_file(gi, workflow_from_json, path):
     f.close()
 
 
-
 def main():
     try:
         args = get_args()
@@ -330,9 +328,9 @@ def main():
         try:
             logging.info('Running workflow {}...'.format(show_wf['name']))
             results = gi.workflows.invoke_workflow(workflow_id=workflow_id,
-                                               inputs=datamap,
-                                               params=params,
-                                               history_name=(args.history + '_results'))
+                                                   inputs=datamap,
+                                                   params=params,
+                                                   history_name=(args.history + '_results'))
         except Exception as ce:
             logging.error("Failure when invoking invoke workflows: {}".format(str(ce)))
             print(str(ce))
