@@ -234,13 +234,16 @@ def validate_labels(wf_from_json, param_data, exit_on_error=True):
         if step_content['label'] is None:
             logging.warning("Step No {} in json workflow does not have a label, parameters are not mappable there.".format(step_id))
         step_labels_wf.append(step_content['label'])
+    errors = 0
     for step_label_p, params in param_data.items():
         if step_label_p not in step_labels_wf:
             if exit_on_error:
                 raise ValueError(
                     " '{}' parameter step label is not present in the workflow definition".format(step_label_p))
             logging.error("{} parameter step label is not present in the workflow definition".format(step_label_p))
-    logging.info("Validation of labels: OK")
+            errors += 1
+    if errors == 0:
+        logging.info("Validation of labels: OK")
 
 
 def validate_input_labels(wf_json, inputs):
