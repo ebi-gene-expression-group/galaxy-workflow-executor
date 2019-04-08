@@ -75,9 +75,19 @@ def set_logging_level(debug=False):
         datefmt='%d-%m-%y %H:%M:%S')
 
 
+def read_yaml_file(yaml_path):
+    """
+    Reads a YAML file safely.
+
+    :param yaml_path:
+    :return: dictionary object from YAML content.
+    """
+    stream = open(yaml_path, "r")
+    return yaml.safe_load(stream)
+
+
 def get_instance(conf, name='__default'):
-    with open(os.path.expanduser(conf), mode='r') as fh:
-        data = yaml.safe_load(fh)
+    data = read_yaml_file(os.path.expanduser(conf))
     assert name in data, 'unknown instance'
     entry = data[name]
     if isinstance(entry, dict):
@@ -264,17 +274,6 @@ def validate_input_labels(wf_json, inputs):
             if step_content['label'] not in inputs:
                 raise ValueError("Input step {} label {} is not present in the inputs YAML file provided."
                                  .format(str(step), step_content['label']))
-
-
-def read_yaml_file(yaml_path):
-    """
-    Reads a YAML file safely.
-
-    :param yaml_path:
-    :return: dictionary object from YAML content.
-    """
-    stream = open(yaml_path, "r")
-    return yaml.safe_load(stream)
 
 
 def validate_file_exists(inputs):
