@@ -39,7 +39,7 @@ def get_args():
                             required=True,
                             help='Path to Yaml detailing inputs')
     arg_parser.add_argument('-o', '--output-dir',
-                            default="./",
+                            default=os.getcwd(),
                             help='Path to output directory')
     arg_parser.add_argument('-H', '--history',
                             default='',
@@ -145,7 +145,7 @@ def download_results(gi, history_id, output_dir, use_names=False):
     for dataset in datasets:
         if dataset['type'] == 'file':
             if use_names and dataset['name'] is not None and dataset['name'] not in used_names:
-                gi.datasets.download_dataset(dataset['id'], file_path=output_dir+"/"+dataset['name'],
+                gi.datasets.download_dataset(dataset['id'], file_path=os.path.join(output_dir, dataset['name']),
                                              use_default_filename=False)
                 used_names.add(dataset['name'])
             else:
@@ -154,9 +154,10 @@ def download_results(gi, history_id, output_dir, use_names=False):
                                              use_default_filename=True)
         elif dataset['type'] == 'collection':
             for ds_in_coll in dataset['elements']:
-                if use_names and ds_in_coll['object']['name'] is not None and ds_in_coll['object']['name'] not in used_names:
+                if use_names and ds_in_coll['object']['name'] is not None \
+                        and ds_in_coll['object']['name'] not in used_names:
                     gi.datasets.download_dataset(ds_in_coll['object']['id'],
-                                                 file_path=output_dir+"/"+ds_in_coll['object']['name'],
+                                                 file_path=os.path.join(output_dir,ds_in_coll['object']['name']),
                                                  use_default_filename=False)
                     used_names.add(ds_in_coll['object']['name'])
                 else:
