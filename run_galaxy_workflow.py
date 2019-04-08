@@ -7,9 +7,12 @@ provisioned locally in a directory. This scripts connects to galaxy instance and
 
 running syntax
 
-python run_galaxy_workflow.py -C galaxy_credentials.yml -o output_dir -I 'embassy' -H 'scanpy_param_test' -W Galaxy-Workflow-Scanpy_default_params.json -P scanpy_param_pretty.json
+python run_galaxy_workflow.py -C galaxy_credentials.yml -o output_dir -G 'embassy' -H 'scanpy_param_test' \
+       -i inputs.yaml \
+       -W Galaxy-Workflow-Scanpy_default_params.json \
+       -P scanpy_param_pretty.json
 
-E-MTAB-101 the experiment directory contains barcodes.tsv, genes.tsv, matrix.mtx and gtf.gz
+File inputs.yaml must contain paths to all input labels in the workflow.
 """
 
 import argparse
