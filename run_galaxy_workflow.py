@@ -62,6 +62,7 @@ def get_args():
                             default=False,
                             help="Keeps histories created, they will be purged if not.")
     arg_parser.add_argument('-w', '--keep-workflow',
+                            action='store_true',
                             default=False,
                             help="Keeps workflow created, it will be purged if not.")
     args = arg_parser.parse_args()
