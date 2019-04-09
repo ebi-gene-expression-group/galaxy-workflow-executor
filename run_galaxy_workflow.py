@@ -188,7 +188,8 @@ def set_params(json_wf, param_data):
 def load_input_files(gi, inputs, workflow, history):
     """
     Loads file in the inputs yaml to the Galaxy instance given. Returns
-    datasets dictionary with names and histories.
+    datasets dictionary with names and histories. It associates existing datasets on Galaxy given by dataset_id
+    to the input where they should be used.
 
     This setup currently doesn't support collections as inputs.
 
@@ -200,6 +201,8 @@ def load_input_files(gi, inputs, workflow, history):
     input_label_b:
       path: /path/to/file_b
       type:
+    input_label_c:
+      dataset_id:
 
     this makes it extensible to support
     :param gi: the galaxy instance (API object)
@@ -213,14 +216,19 @@ def load_input_files(gi, inputs, workflow, history):
 
     for step, step_data in workflow['inputs'].items():
         # upload file and record the identifier
-        if step_data['label'] in inputs:
+        if step_data['label'] in inputs and 'path' in inputs[step_data['label']]:
             upload_res = gi.tools.upload_file(path=inputs[step_data['label']]['path'], history_id=history['id'],
-                                 file_name=step_data['label'],
-                                 file_type=inputs[step_data['label']]['type'])
+                                              file_name=step_data['label'],
+                                              file_type=inputs[step_data['label']]['type'])
             inputs_for_invoke[step] = {
                     'id': upload_res['outputs'][0]['id'],
                     'src': 'hda'
                 }
+        elif step_data['label'] in inputs and 'dataset_id' in inputs[step_data['label']]:
+            inputs_for_invoke[step] = {
+                'id': inputs[step_data['label']]['dataset_id'],
+                'src': 'hda'
+            }
         else:
             raise ValueError("Label '{}' is not present in inputs yaml".format(step_data['label']))
 
@@ -278,7 +286,7 @@ def validate_input_labels(wf_json, inputs):
 
 def validate_file_exists(inputs):
     """
-    Checks that paths exists in the local file system
+    Checks that paths exists in the local file system.
 
     :param inputs: dictionary with inputs
     :return:
@@ -286,6 +294,28 @@ def validate_file_exists(inputs):
     for input_key, input_content in inputs.items():
         if 'path' in input_content and not os.path.isfile(input_content['path']):
             raise ValueError("Input file {} does not exist for input label {}".format(input_content['path'], input_key))
+
+
+def validate_dataset_id_exists(gi, inputs):
+    """
+    Checks that dataset_id exists in the Galaxy instance when dataset_id are specified. Raises an error if the dataset
+    id doesn't exists in the instance.
+
+    :param gi:
+    :param inputs:
+    :return:
+    """
+    warned = False
+    for input_key, input_content in inputs.items():
+        if 'dataset_id' in input_content:
+            ds_in_instance = gi.datasets.show_dataset(dataset_id=input_content['dataset_id'])
+            if not warned:
+                logging.warning("You are using direct dataset identifiers for inputs, "
+                                "this execution is not portable accross instances.")
+                warned = True
+            if not isinstance(ds_in_instance, dict):
+                raise ValueError("Input dataset_id {} does not exist in the Galaxy instance."
+                                 .format(input_content['dataset_id']))
 
 
 def produce_versions_file(gi, workflow_from_json, path):
@@ -317,6 +347,7 @@ def produce_versions_file(gi, workflow_from_json, path):
                 tools_dict.append(step['tool_id'])
                 # tools_dict[step['tool_id']] = {'name': tool['name'], 'version': tool['version']}
 
+
 def main():
     try:
         args = get_args()
@@ -332,10 +363,11 @@ def main():
         validate_input_labels(wf_json=wf_from_json, inputs=inputs_data)
         validate_file_exists(inputs_data)
 
-        # Prepare environment
-        logging.info('Prepare galaxy environment ...')
+        # Prepare environment and do any post connection validations.
+        logging.info('Prepare galaxy environment...')
         ins = get_instance(args.conf, name=args.galaxy_instance)
         gi = GalaxyInstance(ins['url'], key=ins['key'])
+        validate_dataset_id_exists(gi, inputs_data)
 
         # Create new history to run workflow
         logging.info('Create new history to run workflow ...')
@@ -381,7 +413,7 @@ def main():
                               path="{}/software_versions_galaxy.txt".format(args.output_dir))
 
         # wait for a little while and check if the status is ok
-        logging.debug("Sleeping for 100 s now...")
+        logging.info("Sleeping for 100 s now...")
         time.sleep(100)
 
         # get_run_state
@@ -392,8 +424,9 @@ def main():
         logging.debug("Got state: {}".format(state))
         while True:
             logging.debug("Got state: {}".format(state))
-            if state == 'error':
-                logging.error("Execution failed, see {}/histories/show_structure?__identifer={} for details. "
+            # TODO could a resubmission be caught here in the 'error' state?
+            if state == 'error' or results_hid['state_details']['error'] > 0:
+                logging.error("Execution failed, see {}/histories/view?id={} for input details."
                               "You might require login with a particular user.".
                               format(gi.base_url, results_hid['id']))
                 exit(1)
