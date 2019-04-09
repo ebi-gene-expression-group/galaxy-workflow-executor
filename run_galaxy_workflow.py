@@ -263,17 +263,20 @@ def validate_input_labels(wf_json, inputs):
 
     :param wf_json:
     :param inputs:
-    :return:
+    :return: the number of input labels.
     """
 
+    number_of_inputs = 0
     for step, step_content in wf_json['steps'].items():
         if step_content['type'] == 'data_input':
+            number_of_inputs += 1
             if step_content['label'] is None:
                 raise ValueError("Input step {} in workflow has no label set.".format(str(step)))
 
             if step_content['label'] not in inputs:
                 raise ValueError("Input step {} label {} is not present in the inputs YAML file provided."
                                  .format(str(step), step_content['label']))
+    return number_of_inputs
 
 
 def validate_file_exists(inputs):
@@ -317,6 +320,7 @@ def produce_versions_file(gi, workflow_from_json, path):
                 tools_dict.append(step['tool_id'])
                 # tools_dict[step['tool_id']] = {'name': tool['name'], 'version': tool['version']}
 
+
 def main():
     try:
         args = get_args()
@@ -329,8 +333,9 @@ def main():
 
         # Validate data before talking to Galaxy
         validate_labels(wf_from_json, param_data)
-        validate_input_labels(wf_json=wf_from_json, inputs=inputs_data)
-        validate_file_exists(inputs_data)
+        num_inputs = validate_input_labels(wf_json=wf_from_json, inputs=inputs_data)
+        if num_inputs > 0:
+            validate_file_exists(inputs_data)
 
         # Prepare environment
         logging.info('Prepare galaxy environment ...')
@@ -349,8 +354,11 @@ def main():
 
         # upload dataset to history
         logging.info('Uploading dataset to history ...')
-        datamap = load_input_files(gi, inputs=inputs_data,
+        if num_inputs > 0:
+            datamap = load_input_files(gi, inputs=inputs_data,
                                    workflow=show_wf, history=history)
+        else:
+            datamap = {}
         # set parameters
         logging.info('Set parameters ...')
         params = set_params(wf_from_json, param_data)
@@ -426,7 +434,7 @@ def main():
         exit(0)
     except Exception as e:
         logging.error("Failed due to {}".format(str(e)))
-        exit(1)
+        raise e
 
 
 if __name__ == '__main__':
