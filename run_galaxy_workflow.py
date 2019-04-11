@@ -178,11 +178,26 @@ def download_results(gi, history_id, output_dir, use_names=False):
 
 
 def set_params(json_wf, param_data):
+    """
+    Associate parameters to workflow steps via the step label. The result is a dictionary
+    of parameters that can be passed to invoke_workflow.
+
+    :param json_wf:
+    :param param_data:
+    :return:
+    """
     params = {}
     for param_step_name in param_data:
         step_ids = (key for key, value in json_wf['steps'].items() if value['label'] == str(param_step_name))
         for step_id in step_ids:
             params.update({step_id: param_data[param_step_name]})
+        for param_name in param_data[param_step_name]:
+            if '|' in param_name:
+                logging.warning("Workflow using Galaxy <repeat /> "
+                                "param. type for {} / {}. "
+                                "Make sure that workflow has as many entities of that repeat "
+                                "as they are being set in the parameters file.".format(param_step_name, param_name))
+                break
     return params
 
 
