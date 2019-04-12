@@ -143,13 +143,14 @@ def get_run_state(gi, results):
     return state
 
 
-def download_results(gi, history_id, output_dir, use_names=False):
+def download_results(gi, history_id, output_dir, allowed_error_states, use_names=False):
     """
     Downloads results from a given Galaxy instance and history to a specified filesystem location.
 
     :param gi: galaxy instance object
     :param history_id: ID of the history from where results should be retrieved.
     :param output_dir: path to where result file should be written.
+    :param allowed_error_states: dictionary with elements known to be allowed to fail.
     :param use_names: whether to trust or not the internal Galaxy name for the final file name
     :return:
     """
@@ -159,6 +160,10 @@ def download_results(gi, history_id, output_dir, use_names=False):
     used_names = set()
     for dataset in datasets:
         if dataset['type'] == 'file':
+            if dataset['id'] in allowed_error_states['datasets']:
+                logging.info('Skipping download of {} as it is an allowed failure.'
+                             .format(dataset['name']))
+                continue
             if use_names and dataset['name'] is not None and dataset['name'] not in used_names:
                 gi.datasets.download_dataset(dataset['id'], file_path=os.path.join(output_dir, dataset['name']),
                                              use_default_filename=False)
@@ -169,10 +174,15 @@ def download_results(gi, history_id, output_dir, use_names=False):
                                              use_default_filename=True)
         elif dataset['type'] == 'collection':
             for ds_in_coll in dataset['elements']:
+                if ds_in_coll['object']['id'] in allowed_error_states['datasets']:
+                    logging.info('Skipping download of {} as it is an allowed failure.'
+                                 .format(ds_in_coll['object']['name']))
+                    continue
                 if use_names and ds_in_coll['object']['name'] is not None \
                         and ds_in_coll['object']['name'] not in used_names:
+                    # TODO it fails here to download if it is in 'error' state
                     gi.datasets.download_dataset(ds_in_coll['object']['id'],
-                                                 file_path=os.path.join(output_dir,ds_in_coll['object']['name']),
+                                                 file_path=os.path.join(output_dir, ds_in_coll['object']['name']),
                                                  use_default_filename=False)
                     used_names.add(ds_in_coll['object']['name'])
                 else:
@@ -341,35 +351,47 @@ def validate_dataset_id_exists(gi, inputs):
                                  .format(input_content['dataset_id']))
 
 
-def in_error_state(gi, history, allowed_error_states):
+def completion_state(gi, history, allowed_error_states):
     """
     Checks whether the history is in error state considering potential acceptable error states
     in the allowed error states definition.
 
+    :param gi: The galaxy instance connection
     :param history:
     :param allowed_error_states: dictionary containing acceptable error states for steps
-    :return: true if the history is in an error state beyond acceptable
+    :return: two booleans, error_state and completed
     """
 
-    if history['state_details']['error'] == 0:
-        return False
-    # No errors allowed, so if there are steps in error, return true
-    elif len(allowed_error_states) == 0 and history['state_details']['error'] > 0:
-        return True
+    # First easy check for error state if there are no allowed errors
+    error_state = len(allowed_error_states['tools']) == 0 and history['state_details']['error'] > 0
 
-    for dataset_id in history['state_ids']['error']:
-        if dataset_id in allowed_error_states['datasets']:
-            continue
-        dataset = gi.datasets.show_dataset(dataset_id)
-        job = gi.jobs.show_job(dataset['creating_job'])
-        if job['tool_id'] in allowed_error_states['tools']:
-            allowed_error_states['datasets'].add(dataset_id)
-            # TODO decide based on individual error codes.
-            continue
-        logging.info("Tool {} is not marked as allowed to fail, but has failed.".format(job['tool_id']))
-        return True
+    # If there are allowed error states, check details
+    if not error_state:
+        for dataset_id in history['state_ids']['error']:
+            if dataset_id in allowed_error_states['datasets']:
+                continue
+            dataset = gi.datasets.show_dataset(dataset_id)
+            job = gi.jobs.show_job(dataset['creating_job'])
+            if job['tool_id'] in allowed_error_states['tools']:
+                allowed_error_states['datasets'].add(dataset_id)
+                # TODO decide based on individual error codes.
+                continue
+            logging.info("Tool {} is not marked as allowed to fail, but has failed.".format(job['tool_id']))
+            error_state = True
+            break
 
-    return False
+    # We separate completion from errors, so a workflow might have completed with or without errors
+    # (this includes allowed errors). We say the workflow is in completed state when all datasets are in states:
+    # error, ok, paused or failed_metadata.
+    terminal_states = ['error', 'ok', 'paused', 'failed_metadata']
+    non_terminal_datasets_count = 0
+    for state, count in history['state_details'].items():
+        if state not in terminal_states:
+            non_terminal_datasets_count += count
+
+    completed_state = (non_terminal_datasets_count == 0)
+
+    return error_state, completed_state
 
 
 def process_allowed_errors(allowed_errors_dict, wf_from_json):
@@ -506,14 +528,15 @@ def main():
         logging.debug("Got state: {}".format(state))
         while True:
             logging.debug("Got state: {}".format(state))
+            error_state, finalized_state = completion_state(gi, results_hid, allowed_error_states)
             # TODO could a resubmission be caught here in the 'error' state?
-            if state == 'error' or in_error_state(gi, results_hid, allowed_error_states):
+            if error_state:
                 logging.error("Execution failed, see {}/histories/view?id={} for input details."
                               "You might require login with a particular user.".
                               format(gi.base_url, results_hid['id']))
                 exit(1)
-            elif state == 'ok':
-                logging.info("Workflow finished successfully ok")
+            elif finalized_state:
+                logging.info("Workflow finished successfully OK or with allowed errors.")
                 break
             # TODO downloads could be triggered here to gain time.
             time.sleep(10)
@@ -523,7 +546,7 @@ def main():
         # Download results
         logging.info('Downloading results ...')
         download_results(gi, history_id=results['history_id'],
-                         output_dir=args.output_dir,
+                         output_dir=args.output_dir, allowed_error_states=allowed_error_states,
                          use_names=True)
         logging.info('Results available.')
 
