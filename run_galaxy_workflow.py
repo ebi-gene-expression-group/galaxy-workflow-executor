@@ -391,7 +391,8 @@ def main():
 
         # Create new history to run workflow
         logging.info('Create new history to run workflow ...')
-        history = gi.histories.create_history(name=args.history)
+        if num_inputs > 0:
+            history = gi.histories.create_history(name=args.history)
 
         # get saved workflow defined in the galaxy instance
         logging.info('Workflow setup ...')
@@ -471,7 +472,8 @@ def main():
         if not args.keep_histories:
             logging.info('Deleting histories...')
             gi.histories.delete_history(results['history_id'], purge=True)
-            gi.histories.delete_history(history['id'], purge=True)
+            if num_inputs > 0:
+                gi.histories.delete_history(history['id'], purge=True)
             logging.info('Histories purged...')
 
         if not args.keep_workflow:
