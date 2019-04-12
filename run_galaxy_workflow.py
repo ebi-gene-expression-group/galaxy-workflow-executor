@@ -452,7 +452,7 @@ def main():
         wf_from_json = read_json_file(args.workflow)
         param_data = read_json_file(args.parameters)
         inputs_data = read_yaml_file(args.yaml_inputs_path)
-        allowed_error_states = {}
+        allowed_error_states = {'tools': {}, 'datasets': set()}
         if args.allowed_errors is not None:
             allowed_error_states = \
                 process_allowed_errors(read_yaml_file(args.allowed_errors), wf_from_json)
