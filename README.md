@@ -6,6 +6,7 @@ This setup uses bioblend to run a Galaxy workflow through the cli:
   - Galaxy workflow as JSON file (from share workflow -> download).
   - Parameters dictionary as JSON
   - Input files defined in YAML
+  - Steps with allowed errors in YAML (optional)
   - History name (optional)
 
 # Galaxy workflow
@@ -64,5 +65,23 @@ gtf:
 where in this example case the Galaxy workflow should have input labels called `matrix`,
 `genes`, `barcodes` and `gtf`. The paths need to exist in the local file system, if `path` is set within an input. Alternatively to a path in the local file system, if the file is already on the Galaxy instance, the `dataset_id` of the file can be given instead, as shown for the `gtf` case here.
 
+# Steps with allowed errors
+
+This optional YAML file indicates the executor which steps are allowed to fail without the overal execution being considered
+failed and hence retrieving result files anyway. This is to make room to the fact that on a production setup, there might
+be border conditions on datasets that could produce acceptable failures.
+
+The structure of the file relies on the labels for steps used in the workflow and parameters files
+
+```yaml
+step_label_x:
+  - any
+step_label_z:
+  - 1
+  - 43
+```
+
+The above example means that the step with label `step_label_x` can fail with any error code, whereas step with label
+`step_label_z` will only be allowed to fail with codes 1 or 43.
 
 
