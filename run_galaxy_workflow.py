@@ -46,7 +46,6 @@ def get_args():
                             required=True,
                             help='Name of the history to create')
     arg_parser.add_argument('-W', '--workflow',
-                            default='scanpy_workflow_test',
                             required=True,
                             help='Workflow to run')
     arg_parser.add_argument('-P', '--parameters',
@@ -57,6 +56,11 @@ def get_args():
                             action='store_true',
                             default=False,
                             help='Print debug information')
+    arg_parser.add_argument('-a', '--allowed-errors',
+                            required=False,
+                            default=None,
+                            help="Yaml file with allowed steps that can have errors."
+                            )
     arg_parser.add_argument('-k', '--keep-histories',
                             action='store_true',
                             default=False,
@@ -337,6 +341,56 @@ def validate_dataset_id_exists(gi, inputs):
                                  .format(input_content['dataset_id']))
 
 
+def in_error_state(gi, history, allowed_error_states):
+    """
+    Checks whether the history is in error state considering potential acceptable error states
+    in the allowed error states definition.
+
+    :param history:
+    :param allowed_error_states: dictionary containing acceptable error states for steps
+    :return: true if the history is in an error state beyond acceptable
+    """
+
+    if history['state_details']['error'] == 0:
+        return False
+    # No errors allowed, so if there are steps in error, return true
+    elif len(allowed_error_states) == 0 and history['state_details']['error'] > 0:
+        return True
+
+    for dataset_id in history['state_ids']['error']:
+        if dataset_id in allowed_error_states['datasets']:
+            continue
+        dataset = gi.datasets.show_dataset(dataset_id)
+        job = gi.jobs.show_job(dataset['creating_job'])
+        if job['tool_id'] in allowed_error_states['tools']:
+            allowed_error_states['datasets'].add(dataset_id)
+            # TODO decide based on individual error codes.
+            continue
+        logging.info("Tool {} is not marked as allowed to fail, but has failed.".format(job['tool_id']))
+        return True
+
+    return False
+
+
+def process_allowed_errors(allowed_errors_dict, wf_from_json):
+    """
+    Reads the input from allowed errors file and translates the workflow steps into tool identifiers that will be
+    allowed to error out, either on all error codes (when "any" is available for the tool) or on specified error codes.
+
+    :param wf_from_json:
+    :param allowed_errors_dict: content from yaml file with definition of steps can fail.
+    :return:
+    """
+
+    allowed_errors_state = {'tools': {}, 'datasets': set()}
+    for step_id, step_content in wf_from_json['steps'].items():
+        if step_content['label'] is not None and step_content['tool_id'] is not None:
+            if step_content['label'] in allowed_errors_dict:
+                allowed_errors_state['tools'][step_content['tool_id']] = allowed_errors_dict[step_content['label']]
+
+    return allowed_errors_state
+
+
 def produce_versions_file(gi, workflow_from_json, path):
     """
     Produces a tool versions file for the workflow run.
@@ -376,6 +430,11 @@ def main():
         wf_from_json = read_json_file(args.workflow)
         param_data = read_json_file(args.parameters)
         inputs_data = read_yaml_file(args.yaml_inputs_path)
+        allowed_error_states = {}
+        if args.allowed_errors is not None:
+            allowed_error_states = \
+                process_allowed_errors(read_yaml_file(args.allowed_errors), wf_from_json)
+
 
         # Validate data before talking to Galaxy
         validate_labels(wf_from_json, param_data)
@@ -419,8 +478,7 @@ def main():
                                                    history_name=(args.history + '_results'))
         except Exception as ce:
             logging.error("Failure when invoking invoke workflows: {}".format(str(ce)))
-            print(str(ce))
-            exit(1)
+            raise ce
 
         logging.debug("About to start serialization...")
         try:
@@ -449,7 +507,7 @@ def main():
         while True:
             logging.debug("Got state: {}".format(state))
             # TODO could a resubmission be caught here in the 'error' state?
-            if state == 'error' or results_hid['state_details']['error'] > 0:
+            if state == 'error' or in_error_state(gi, results_hid, allowed_error_states):
                 logging.error("Execution failed, see {}/histories/view?id={} for input details."
                               "You might require login with a particular user.".
                               format(gi.base_url, results_hid['id']))
