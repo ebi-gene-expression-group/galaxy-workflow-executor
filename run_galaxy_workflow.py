@@ -351,11 +351,12 @@ def validate_dataset_id_exists(gi, inputs):
                                  .format(input_content['dataset_id']))
 
 
-def completion_state(gi, history, allowed_error_states):
+def completion_state(gi, history, allowed_error_states, wait_for_resubmission=True):
     """
     Checks whether the history is in error state considering potential acceptable error states
     in the allowed error states definition.
 
+    :param wait_for_resubmission:
     :param gi: The galaxy instance connection
     :param history:
     :param allowed_error_states: dictionary containing acceptable error states for steps
@@ -377,8 +378,28 @@ def completion_state(gi, history, allowed_error_states):
                 # TODO decide based on individual error codes.
                 continue
             logging.info("Tool {} is not marked as allowed to fail, but has failed.".format(job['tool_id']))
-            error_state = True
-            break
+            # Sometimes transient error states will be found for jobs that are in the process
+            # of being resubmitted. This part accounts for that, waiting for the state to go back
+            # from error.
+            if wait_for_resubmission:
+                # We have seen jobs circling from error to running again in lapses of around 10 seconds
+                # at the most, so we wait for conservative period. This could be improved later.
+                logging.info("Waiting 20 sec to check if the job gets re-submitted")
+                time.sleep(20)
+                ds = gi.datasets.show_dataset(dataset_id)
+                if not ds['resubmitted']:
+                    logging.info("Job was not resubmitted")
+                    error_state = True
+                    break
+                elif ds['state'] != 'error':
+                    logging.info("Job was resubmitted and is not in error any more...")
+                else:
+                    logging.info("Job was resubmitted at some point, but still shows to be in error state, failing")
+                    error_state = True
+                    break
+            else:
+                error_state = True
+                break
 
     # We separate completion from errors, so a workflow might have completed with or without errors
     # (this includes allowed errors). We say the workflow is in completed state when all datasets are in states:
