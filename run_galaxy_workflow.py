@@ -506,7 +506,7 @@ def main():
         logging.info('Uploading dataset to history ...')
         if num_inputs > 0:
             datamap = load_input_files(gi, inputs=inputs_data,
-                                   workflow=show_wf, history=history)
+                                       workflow=show_wf, history=history)
         else:
             datamap = {}
         # set parameters
@@ -538,7 +538,10 @@ def main():
                               path="{}/software_versions_galaxy.txt".format(args.output_dir))
 
         # wait for a little while and check if the status is ok
-        logging.info("Sleeping for 100 s now...")
+        logging.info("Waiting for results to be available...")
+        logging.info("...in the mean time, you can check {}/histories/view?id={} for progress."
+                     "You need to login with the user that owns the API Key.".
+                     format(gi.base_url, results['history_id']))
         time.sleep(100)
 
         # get_run_state
