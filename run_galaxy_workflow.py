@@ -424,6 +424,10 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
             logging.info("Tool {} is not marked as allowed to fail, but is paused due to a previous tool failure."
                          .format(job['tool_id']))
             error_state = True
+        # display state of jobs in history:
+        logging.info("Workflow seems to be completed, states are:")
+        for state, count in history['state_details'].items():
+            logging.info("State: {} - Count: {}".format(state, count))
 
     return error_state, completed_state
 
