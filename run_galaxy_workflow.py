@@ -414,7 +414,7 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
 
     if completed_state:
         # add all paused jobs to allowed_error_states or fail if jobs are paused that are not allowed
-        for dataset_id in history['state_ids']['pause']:
+        for dataset_id in history['state_ids']['paused']:
             dataset = gi.datasets.show_dataset(dataset_id)
             job = gi.jobs.show_job(dataset['creating_job'])
             if job['tool_id'] in allowed_error_states['tools']:
