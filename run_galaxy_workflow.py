@@ -412,6 +412,19 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
 
     completed_state = (non_terminal_datasets_count == 0)
 
+    if completed_state:
+        # add all paused jobs to allowed_error_states or fail if jobs are paused that are not allowed
+        for dataset_id in history['state_ids']['pause']:
+            dataset = gi.datasets.show_dataset(dataset_id)
+            job = gi.jobs.show_job(dataset['creating_job'])
+            if job['tool_id'] in allowed_error_states['tools']:
+                allowed_error_states['datasets'].add(dataset_id)
+                # TODO decide based on individual error codes.
+                continue
+            logging.info("Tool {} is not marked as allowed to fail, but is paused due to a previous tool failure."
+                         .format(job['tool_id']))
+            error_state = True
+
     return error_state, completed_state
 
 
