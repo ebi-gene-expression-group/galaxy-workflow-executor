@@ -412,6 +412,23 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
 
     completed_state = (non_terminal_datasets_count == 0)
 
+    if completed_state:
+        # add all paused jobs to allowed_error_states or fail if jobs are paused that are not allowed
+        for dataset_id in history['state_ids']['paused']:
+            dataset = gi.datasets.show_dataset(dataset_id)
+            job = gi.jobs.show_job(dataset['creating_job'])
+            if job['tool_id'] in allowed_error_states['tools']:
+                allowed_error_states['datasets'].add(dataset_id)
+                # TODO decide based on individual error codes.
+                continue
+            logging.info("Tool {} is not marked as allowed to fail, but is paused due to a previous tool failure."
+                         .format(job['tool_id']))
+            error_state = True
+        # display state of jobs in history:
+        logging.info("Workflow run has completed, job counts per states are:")
+        for state, count in history['state_details'].items():
+            logging.info("{}: {}".format(state, count))
+
     return error_state, completed_state
 
 
@@ -548,7 +565,19 @@ def main():
         results_hid = gi.histories.show_history(results['history_id'])
         state = results_hid['state']
 
-        # wait until the jobs are completed
+        # wait until workflow invocation is fully scheduled, cancelled of failed
+        while True:
+            invocation = gi.workflows.show_invocation(workflow_id=results['workflow_id'], invocation_id=results['id'])
+            if invocation['state'] in ['scheduled', 'cancelled', 'failed']:
+                # These are the terminal states of the invocation process. Scheduled means that all jobs needed for the
+                # workflow have been scheduled, not that the workflow is finished. However, there is no point in
+                # checking completion through history elements if this hasn't happened yet.
+                logging.info("Workflow invocation has entered a terminal state: {}".format(invocation['state']))
+                logging.info("Proceeding to check individual jobs state to determine completion or failure...")
+                break
+            time.sleep(10)
+
+        # wait until the jobs are completed, once workflow scheduling is done.
         logging.debug("Got state: {}".format(state))
         while True:
             logging.debug("Got state: {}".format(state))
