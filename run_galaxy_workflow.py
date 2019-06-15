@@ -406,11 +406,15 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
     # error, ok, paused or failed_metadata.
     terminal_states = ['error', 'ok', 'paused', 'failed_metadata']
     non_terminal_datasets_count = 0
+    terminal_datasets_count = 0
     for state, count in history['state_details'].items():
         if state not in terminal_states:
             non_terminal_datasets_count += count
+        if state in terminal_states:
+            terminal_datasets_count += count
 
-    completed_state = (non_terminal_datasets_count == 0)
+    # We add the terminal_datasets_count to avoid falling here when all job states are in zero.
+    completed_state = (non_terminal_datasets_count == 0 and terminal_datasets_count > 0)
 
     if completed_state:
         # add all paused jobs to allowed_error_states or fail if jobs are paused that are not allowed
