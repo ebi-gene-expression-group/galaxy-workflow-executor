@@ -82,6 +82,15 @@ step_label_z:
 ```
 
 The above example means that the step with label `step_label_x` can fail with any error code, whereas step with label
-`step_label_z` will only be allowed to fail with codes 1 or 43.
+`step_label_z` will only be allowed to fail with codes 1 or 43 (specific error code handling is not yet implemented).
+
+# Exit error codes
+
+Currently produced error codes:
+
+| Error code | Description |
+|------------|-------------|
+| 3          | Connection error during history deletion, this is not a critical error as most probably the history will get deleted by the server. A file named histories_to_check.txt is created in the working directory. Data will have been downloaded by then. |
+
 
 
