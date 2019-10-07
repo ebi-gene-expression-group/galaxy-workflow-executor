@@ -22,9 +22,12 @@ import time
 import yaml
 from sys import exit
 import pickle
-import copy
 import json
 from bioblend.galaxy import GalaxyInstance
+from bioblend import ConnectionError
+
+# Exit status:
+# 3 - history deletion problem
 
 
 def get_args():
@@ -609,15 +612,32 @@ def main():
 
         if not args.keep_histories:
             logging.info('Deleting histories...')
-            gi.histories.delete_history(results['history_id'], purge=True)
-            if num_inputs > 0:
-                gi.histories.delete_history(history['id'], purge=True)
+            try:
+                gi.histories.delete_history(results['history_id'], purge=True)
+                if num_inputs > 0:
+                    gi.histories.delete_history(history['id'], purge=True)
+            except ConnectionError:
+                logging.error('Connection was interrupted while trying to delete histories, '
+                              'although this probably succeded at the server, you should check that they have been deleted.')
+                hist_to_delete_path = os.path.join(args.output_dir, 'histories_to_check.txt')
+                logging.info('Adding collection identifiers to be checked to {}'.format(hist_to_delete_path))
+                with open(hist_to_delete_path, mode="w") as f:
+                    for hist in results['history_id'], history['id']:
+                        f.write(str(hist)+"\n")
+                logging.info("Exiting with error code 3 now to signal the connection error on history deletion.")
+                logging.info("Data should have been downloaded fine, "
+                             "and there is no reason not to proceed with any posterior analysis")
+                exit(3)
             logging.info('Histories purged...')
 
         if not args.keep_workflow:
             logging.info('Deleting workflow...')
-            gi.workflows.delete_workflow(workflow_id=workflow_id)
-            logging.info('Workflow deleted.')
+            try:
+                gi.workflows.delete_workflow(workflow_id=workflow_id)
+                logging.info('Workflow deleted.')
+            except ConnectionError:
+                logging.error('Connection was interrupted while trying to delete the workflow, '
+                              'although this probably succeeded at the server... ignoring.')
 
         exit(0)
     except Exception as e:
