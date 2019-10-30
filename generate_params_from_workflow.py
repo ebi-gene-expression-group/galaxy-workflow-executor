@@ -2,9 +2,9 @@
 
 """generate_params_from_workflow
 
-This script generate json parameter file from galaxy workflow using config_credentials.yml file provided.
+This script generate json parameter file from galaxy workflow using galaxy_credentials.yml.sample file provided in repo.
 provisioned locally in a directory. This scripts connects to galaxy instance and grabs parameters 
-using bioblend galaxy instance.
+from galaxy workflow object and deletes workflow in galaxy instance.
 
 running syntax
 
@@ -12,10 +12,11 @@ python generate_params_from_workflow.py \
         -C galaxy_credentials.yml.sample \
         -G 'ebi_cluster' \
         -o $PWD \
-        -N 'scanpy_param_test' \
         -W scanpy_clustering_workflow.json 
 
 File galaxy_credentials.yml.sample must contain url and key.
+
+Output parameter file will be appended with workflow_filename as workflow_filename_parameters.json in output dir.
 """
 
 import json
@@ -38,10 +39,6 @@ def get_args():
     arg_parser.add_argument('-o', '--output-dir',
                             default="./",
                             help='Path to output directory')
-    arg_parser.add_argument('-N', '--name-parameter',
-                            default='scanpy_params',
-                            required=True,
-                            help='Name of the parameter file to create')
     arg_parser.add_argument('-W', '--workflow',
                             default='scanpy_clustering_workflow',
                             required=True,
@@ -110,9 +107,14 @@ def main():
                 step_name=value['label']
                 param.update({step_name: show_wf['steps'][step_id]['tool_inputs']})
 
-        with open((os.path.join(args.output_dir,args.name_parameter) + ".json"), 'w') as f:
+        param_file=(os.path.join(args.output_dir,os.path.basename(args.workflow).split('.')[0]) + "_parameters.json")
+        with open(param_file, 'w') as f:
             json.dump(param, f, indent=4, sort_keys=True)
-            print('parameter output file:',(os.path.join(args.output_dir,args.name_parameter) + ".json"))
+            print("parameter output file : " + param_file)
+
+        # delete workflow from galaxy instance
+        logging.info("Deleting workflow...")
+        gi.workflows.delete_workflow(workflow_id=workflow_id)
 
     except:
         exit(1)
