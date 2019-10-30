@@ -19,7 +19,14 @@ dictionary. It should be the JSON file resulting from Workflows (upper menu) -> 
 
 # Parameters JSON
 
-It should follow the following structure:
+The parameters JSON file can be generated for an associated workflow using the script
+generate_params_from_workflow.py
+
+- Inputs:
+    - Galaxy workflow as JSON file (from share workflow -> download)
+    - Output directory path (optional)
+
+The output parameters.JSON should follow the following structure:
 
 ```json
 {
