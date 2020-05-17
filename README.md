@@ -1,6 +1,6 @@
 # Galaxy workflow executor
 
-This setup uses bioblend to run a Galaxy workflow through the cli:
+This setup uses bioblend (0.12.0 tested) to run a Galaxy workflow through the cli:
 
 - Inputs:
   - Galaxy workflow as JSON file (from share workflow -> download).
