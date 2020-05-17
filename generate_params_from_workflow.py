@@ -19,13 +19,12 @@ File galaxy_credentials.yml.sample must contain url and key.
 Output parameter file will be appended with workflow_filename as workflow_filename_parameters.json in output dir.
 """
 
-import json
 import argparse
 import os.path
 from bioblend.galaxy import GalaxyInstance
-import yaml
-import logging
 from sys import exit
+
+from wfexecutor import *
 
 
 def get_args():
@@ -51,30 +50,6 @@ def get_args():
     args = arg_parser.parse_args()
     return args
 
-
-def get_instance(conf, name='__default'):
-    with open(os.path.expanduser(conf), mode='r') as fh:
-        data = yaml.load(fh)
-    assert name in data, 'unknown instance'
-    entry = data[name]
-    if isinstance(entry, dict):
-        return entry
-    else:
-        return data[entry]
-
-def read_json_file(json_file_path):
-    with open(json_file_path) as json_file:
-        json_obj = json.load(json_file)
-    return json_obj
-
-def get_workflow_from_file(gi, workflow_file):
-    import_workflow = [gi.workflows.import_workflow_from_local_path(file_local_path = workflow_file)]
-    return import_workflow
-
-def get_workflow_id(wf):
-    for wf_dic in wf:
-        wf_id = wf_dic['id']
-    return wf_id
 
 def set_logging_level(debug=False):
     logging.basicConfig(
