@@ -1,6 +1,6 @@
 # Galaxy workflow executor
 
-This setup uses bioblend to run a Galaxy workflow through the cli:
+This setup uses bioblend (0.12.0 tested) to run a Galaxy workflow through the cli:
 
 - Inputs:
   - Galaxy workflow as JSON file (from share workflow -> download).
@@ -19,7 +19,14 @@ dictionary. It should be the JSON file resulting from Workflows (upper menu) -> 
 
 # Parameters JSON
 
-It should follow the following structure:
+The parameters JSON file can be generated for an associated workflow using the script
+generate_params_from_workflow.py
+
+- Inputs:
+    - Galaxy workflow as JSON file (from share workflow -> download)
+    - Output directory path (optional)
+
+The output parameters.JSON should follow the following structure:
 
 ```json
 {
@@ -82,6 +89,15 @@ step_label_z:
 ```
 
 The above example means that the step with label `step_label_x` can fail with any error code, whereas step with label
-`step_label_z` will only be allowed to fail with codes 1 or 43.
+`step_label_z` will only be allowed to fail with codes 1 or 43 (specific error code handling is not yet implemented).
+
+# Exit error codes
+
+Currently produced error codes:
+
+| Error code | Description |
+|------------|-------------|
+| 3          | Connection error during history deletion, this is not a critical error as most probably the history will get deleted by the server. A file named histories_to_check.txt is created in the working directory. Data will have been downloaded by then. |
+
 
 

@@ -22,9 +22,12 @@ import time
 import yaml
 from sys import exit
 import pickle
-import copy
 import json
 from bioblend.galaxy import GalaxyInstance
+from bioblend import ConnectionError
+
+# Exit status:
+# 3 - history deletion problem
 
 
 def get_args():
@@ -406,11 +409,15 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
     # error, ok, paused or failed_metadata.
     terminal_states = ['error', 'ok', 'paused', 'failed_metadata']
     non_terminal_datasets_count = 0
+    terminal_datasets_count = 0
     for state, count in history['state_details'].items():
         if state not in terminal_states:
             non_terminal_datasets_count += count
+        if state in terminal_states:
+            terminal_datasets_count += count
 
-    completed_state = (non_terminal_datasets_count == 0)
+    # We add the terminal_datasets_count to avoid falling here when all job states are in zero.
+    completed_state = (non_terminal_datasets_count == 0 and terminal_datasets_count > 0)
 
     if completed_state:
         # add all paused jobs to allowed_error_states or fail if jobs are paused that are not allowed
@@ -605,15 +612,32 @@ def main():
 
         if not args.keep_histories:
             logging.info('Deleting histories...')
-            gi.histories.delete_history(results['history_id'], purge=True)
-            if num_inputs > 0:
-                gi.histories.delete_history(history['id'], purge=True)
+            try:
+                gi.histories.delete_history(results['history_id'], purge=True)
+                if num_inputs > 0:
+                    gi.histories.delete_history(history['id'], purge=True)
+            except ConnectionError:
+                logging.error('Connection was interrupted while trying to delete histories, '
+                              'although this probably succeded at the server, you should check that they have been deleted.')
+                hist_to_delete_path = os.path.join(args.output_dir, 'histories_to_check.txt')
+                logging.info('Adding collection identifiers to be checked to {}'.format(hist_to_delete_path))
+                with open(hist_to_delete_path, mode="w") as f:
+                    for hist in results['history_id'], history['id']:
+                        f.write(str(hist)+"\n")
+                logging.info("Exiting with error code 3 now to signal the connection error on history deletion.")
+                logging.info("Data should have been downloaded fine, "
+                             "and there is no reason not to proceed with any posterior analysis")
+                exit(3)
             logging.info('Histories purged...')
 
         if not args.keep_workflow:
             logging.info('Deleting workflow...')
-            gi.workflows.delete_workflow(workflow_id=workflow_id)
-            logging.info('Workflow deleted.')
+            try:
+                gi.workflows.delete_workflow(workflow_id=workflow_id)
+                logging.info('Workflow deleted.')
+            except ConnectionError:
+                logging.error('Connection was interrupted while trying to delete the workflow, '
+                              'although this probably succeeded at the server... ignoring.')
 
         exit(0)
     except Exception as e:
