@@ -82,7 +82,7 @@ def main():
 
         param_file=(os.path.join(args.output_dir,os.path.basename(args.workflow).split('.')[0]) + "_parameters.json")
         with open(param_file, 'w') as f:
-            json.dump(param, f, indent=4, sort_keys=True)
+            yaml.dump(param, f, indent=4, sort_keys=True)
             print("parameter output file : " + param_file)
 
         # delete workflow from galaxy instance
