@@ -15,8 +15,8 @@ virtualenv venv-test
 source venv-test/bin/activate
 pip install . ephemeris galaxy-parsec
 galaxy-wait -g http://localhost:8080/
-admin_id=$(parsec -g local_cont users get_users | jq '.[] | select(.username=="admin") | .id' | sed s/\"//g)
-api_key_admin=$(parsec -g local_cont users create_user_apikey $admin_id)
+admin_id=$(parsec -g test -f test/parsec_creds.yaml users get_users | jq '.[] | select(.username=="admin") | .id' | sed s/\"//g)
+api_key_admin=$(parsec -g test -f test/parsec_creds.yaml users create_user_apikey $admin_id)
 
 sed "s/<ADMIN_USER_API_KEY>/$api_key_admin/" test/test_galaxy_credentials.yaml.template > test/creds.yaml
 
