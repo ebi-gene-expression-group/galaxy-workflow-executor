@@ -11,10 +11,13 @@ cache:
 before_script:
   - |
     filename=docker-cache/saved_images.tar
-    if [[ -f "$filename" ]]; then docker load < "$filename"; fi
-    mkdir -p docker-cache
-    docker pull bgruening/galaxy-stable:19.09
-    docker save -o "$filename" bgruening/galaxy-stable:19.09
+    if [[ -f "$filename" ]]; then
+       docker load < "$filename";
+    else
+      mkdir -p docker-cache
+      docker pull bgruening/galaxy-stable:19.09
+      docker save -o "$filename" bgruening/galaxy-stable:19.09
+    fi
 
 script:
 - bash run_tests_with_containers.sh
