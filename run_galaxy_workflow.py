@@ -18,6 +18,7 @@ File inputs.yaml must contain paths to all input labels in the workflow.
 import argparse
 import os.path
 from sys import exit
+from collections.abc import Mapping
 import pickle
 from bioblend.galaxy import GalaxyInstance
 from bioblend import ConnectionError
@@ -100,6 +101,17 @@ def main():
             allowed_error_states = \
                 process_allowed_errors(read_yaml_file(args.allowed_errors), wf_from_json)
 
+        # Move any simple parameters from parameters to inputs
+        params_to_move = []
+        for pk, pv in param_data.items():
+            if not isinstance(pv, Mapping):
+                # this means that it is an atomic value and not a dictionary
+                # so this is a simple input
+                params_to_move.append(pk)
+
+        for pk in params_to_move:
+            inputs_data[pk] = param_data[pk]
+            del param_data[pk]
 
         # Validate data before talking to Galaxy
         validate_labels(wf_from_json, param_data)

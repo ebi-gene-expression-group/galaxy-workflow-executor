@@ -4,6 +4,7 @@ import time
 
 import os.path
 
+from collections.abc import Mapping
 import yaml
 import json
 
@@ -187,6 +188,9 @@ def load_input_files(gi, inputs, workflow, history):
                 'id': inputs[step_data['label']]['dataset_id'],
                 'src': 'hda'
             }
+        elif step_data['label'] in inputs and not isinstance(inputs[step_data['label']], Mapping):
+            # We are in the presence of a simple parameter input
+            inputs_for_invoke[step] = inputs[step_data['label']]
         else:
             raise ValueError("Label '{}' is not present in inputs yaml".format(step_data['label']))
 
@@ -404,7 +408,7 @@ def produce_versions_file(gi, workflow_from_json, path):
                 tool = gi.tools.show_tool(step['tool_id'])
                 label = step['label'] if step['label'] is not None else tool['name']
                 url = ""
-                if tool['tool_shed_repository'] is not None:
+                if 'tool_shed_repository' in tool and tool['tool_shed_repository'] is not None:
                     ts_meta = tool['tool_shed_repository']
                     url = "https://{}/view/{}/{}/{}".format(ts_meta['tool_shed'], ts_meta['owner'], ts_meta['name'],
                                                             ts_meta['changeset_revision'])
