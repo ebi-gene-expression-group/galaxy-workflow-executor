@@ -14,7 +14,7 @@ setup(
         description='Execute workflows on Galaxy through the CLI',
         long_description=readme(),
         packages=find_packages(),
-        install_requires=['bioblend==0.12.0'],
+        install_requires=['bioblend==0.13.0'],
         author='Suhaib Mohammed, Pablo Moreno',
         author_email='',
         scripts=['run_galaxy_workflow.py', 'generate_params_from_workflow.py'],
