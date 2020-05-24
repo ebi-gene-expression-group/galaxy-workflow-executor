@@ -1,20 +1,19 @@
 # pip install virtualenv
-set -e
-rm -rf venv-test
-virtualenv venv-test
-source venv-test/bin/activate
-pip install . ephemeris parsec
 
-api_key=ahsdashdi3d3oijd23odj23
 set +e
 docker stop galaxy-test-instance
 docker rm galaxy-test-instance
 set -e
+api_key=ahsdashdi3d3oijd23odj23
 docker run -d -p 8080:80 -p 8021:21 -p 8022:22 \
     --name galaxy-test-instance \
     -e "GALAXY_CONFIG_MASTER_API_KEY=$api_key" \
     -e "NONUSE=nodejs,proftp,reports" \
     bgruening/galaxy-stable:19.09
+rm -rf venv-test
+virtualenv venv-test
+source venv-test/bin/activate
+pip install . ephemeris galaxy-parsec
 galaxy-wait -g http://localhost:8080/
 admin_id=$(parsec -g local_cont users get_users | jq '.[] | select(.username=="admin") | .id' | sed s/\"//g)
 api_key_admin=$(parsec -g local_cont users create_user_apikey $admin_id)
