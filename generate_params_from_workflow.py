@@ -22,7 +22,6 @@ Output parameter file will be appended with workflow_filename as workflow_filena
 import argparse
 import os.path
 from bioblend.galaxy import GalaxyInstance
-from sys import exit
 
 from wfexecutor import *
 
