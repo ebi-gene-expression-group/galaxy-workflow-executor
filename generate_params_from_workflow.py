@@ -45,6 +45,10 @@ def get_args():
                             action='store_true',
                             default=False,
                             help='Print debug information')
+    arg_parser.add_argument('--include-internals',
+                            action='store_true',
+                            default=False,
+                            help='Include internal parameters')
 
     args = arg_parser.parse_args()
     return args
@@ -74,13 +78,34 @@ def main():
         show_wf = gi.workflows.show_workflow(workflow_id)
 
         param = {}
-        for key, value in json_wf['steps'].iteritems():
+        for key, value in json_wf['steps'].items():
             if str(value['label']) != 'None':
-                step_id=key
-                step_name=value['label']
-                param.update({step_name: show_wf['steps'][step_id]['tool_inputs']})
+                step_id = key
+                step_name = value['label']
+                content = show_wf['steps'][step_id]['tool_inputs']
+                if 'parameter_type' in content:
+                    # treat simple input parameters differently
+                    logging.info("Step {} is a simple input parameter".format(step_name))
+                    content = ''
+                elif not args.include_internals:
+                    # if this is not a simple parameter (so a dict) and
+                    # we don't want to include __internal_parameters__
+                    delete_cks = []
+                    for ck, cv in content.items():
+                        if ck.startswith('__') and ck.endswith('__'):
+                            logging.info("In step {} parameter {} is internal".format(step_name, ck))
+                            delete_cks.append(ck)
+                            continue
+                        # and we want to remove parameters already defined by connections
+                        if isinstance(cv, Mapping):
+                            if '__class__' in cv:
+                                logging.info("In step {} parameter {} is a connector".format(step_name, ck))
+                                delete_cks.append(ck)
+                    for ck in delete_cks:
+                        del content[ck]
+                param.update({step_name: content})
 
-        param_file=(os.path.join(args.output_dir,os.path.basename(args.workflow).split('.')[0]) + "_parameters.json")
+        param_file = (os.path.join(args.output_dir, os.path.basename(args.workflow).split('.')[0]) + "_parameters.yaml")
         with open(param_file, 'w') as f:
             yaml.dump(param, f, indent=4, sort_keys=True)
             print("parameter output file : " + param_file)
