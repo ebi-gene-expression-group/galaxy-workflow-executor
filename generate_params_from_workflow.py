@@ -59,7 +59,6 @@ def set_logging_level(debug=False):
 
 
 def main():
-    try:
         args = get_args()
         set_logging_level(args.debug)
 
@@ -91,8 +90,7 @@ def main():
         logging.info("Deleting workflow...")
         gi.workflows.delete_workflow(workflow_id=workflow_id)
 
-    except:
-        exit(1)
+
 
 if __name__ == '__main__':
         main()
