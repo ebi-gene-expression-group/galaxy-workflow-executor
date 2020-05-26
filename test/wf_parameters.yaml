@@ -1,0 +1,5 @@
+cut:
+    delimiter: T
+cut_parameter: 'c1'
+select_lines:
+    lineNum: '2'

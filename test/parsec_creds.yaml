@@ -1,0 +1,5 @@
+__default: test
+
+test:
+  key: "ahsdashdi3d3oijd23odj23"
+  url: "http://localhost:8080/"

@@ -1,13 +1,16 @@
-# Galaxy workflow executor
+[![PyPI version fury.io](https://badge.fury.io/py/galaxy-workflow-executor.svg)](https://pypi.python.org/pypi/galaxy-workflow-executor/)
+[![Build Status](https://api.travis-ci.org/ebi-gene-expression-group/galaxy-workflow-executor.svg?branch=develop)](https://travis-ci.org/ebi-gene-expression-group/galaxy-workflow-executor)
 
-This setup uses bioblend (0.12.0 tested) to run a Galaxy workflow through the cli:
+# Galaxy workflow executor 0.2
+
+This setup uses bioblend (0.12 - 0.13 tested) to run a Galaxy workflow through the cli:
 
 - Inputs:
-  - Galaxy workflow as JSON file (from share workflow -> download).
-  - Parameters dictionary as JSON
-  - Input files defined in YAML
-  - Steps with allowed errors in YAML (optional)
-  - History name (optional)
+  - Galaxy workflow with steps annotated with labels as JSON file (MUST be obtained in Galaxy UI from Share Workflow -> Download).
+  - Parameters dictionary as YAML (JSON also supported). Supports both simple input parameters and tools parameters not exposed by simple input parameters.
+  - Input files specified as paths or dataset IDs in a YAML file.
+  - Steps with allowed errors specified in a YAML file (optional)
+  - Name for a history to be created (optional)
 
 # Galaxy workflow
 
@@ -17,35 +20,36 @@ dictionary. It should be the JSON file resulting from Workflows (upper menu) -> 
 (on the drop down menu of the workflow, in the workflow list) -> Download
 (in the following screen).
 
-# Parameters JSON
+# Parameters YAML
 
-The parameters JSON file can be generated for an associated workflow using the script
-generate_params_from_workflow.py
+The parameters YAML file can be generated for a desired workflow by executing:
+
+```
+generate_params_from_workflow.py -C galaxy_credentials.yaml \
+                            -G test_instance -o test \
+                            -W wf.json
+```
 
 - Inputs:
+    - Credentials file to a Galaxy instance (this file uses the same format as the one used by [parsec](https://parsec.readthedocs.io/en/latest/))
+    - Name of the Galaxy instance among those listed in the credentials file (optional).
     - Galaxy workflow as JSON file (from share workflow -> download)
     - Output directory path (optional)
 
-The output parameters.JSON should follow the following structure:
+The output wf-parameters.yaml will follow the following structure:
 
-```json
-{
-    "step_label_x": {
-        "param_name": "value",
-        ....
-        "nested_param_name": {
-            "n_param_name": "n_value",
-            ....
-            "x_param_name": "x_value"
-        }
-
-    },
-    "step_label_x2": {
-        ....
-    },
+```yaml
+step_label_x:
+   param_name: "value"
     ....
-    "other_galaxy_setup_params": { ... }
-}
+   nested_param_name:
+        n_param_name: "n_value"
+        ....
+        x_param_name: "x_value"
+step_label_x2:
+    ....
+....
+other_galaxy_setup_params: { ... }
 ```
 
 # Input files in YAML
@@ -90,6 +94,16 @@ step_label_z:
 
 The above example means that the step with label `step_label_x` can fail with any error code, whereas step with label
 `step_label_z` will only be allowed to fail with codes 1 or 43 (specific error code handling is not yet implemented).
+
+# Results
+
+All workflow outputs that were marked in the workflow to be shown will be downloaded to the specified results directory,
+hidden results will be ignored. Unless specified, histories (with its contents) and workflows will be deleted from the instance.
+
+# Toy example
+
+A simple example, which is used in the CI testing, can be seen and run locally through the
+[run_tests_with_containers.sh](run_tests_with_containers.sh) script.
 
 # Exit error codes
 
