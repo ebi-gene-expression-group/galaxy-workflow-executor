@@ -2,22 +2,22 @@ sudo: required
 language: python
 python: 3.6
 services:
-  - docker
+- docker
 
 cache:
   directories:
-    - docker-cache
+  - docker-cache
 
 before_script:
-  - |
-    filename=docker-cache/saved_images.tar
-    if [[ -f "$filename" ]]; then
-       docker load < "$filename";
-    else
-      mkdir -p docker-cache
-      docker pull bgruening/galaxy-stable:19.09
-      docker save -o "$filename" bgruening/galaxy-stable:19.09
-    fi
+- |
+  filename=docker-cache/saved_images.tar
+  if [[ -f "$filename" ]]; then
+     docker load < "$filename";
+  else
+    mkdir -p docker-cache
+    docker pull bgruening/galaxy-stable:19.09
+    docker save -o "$filename" bgruening/galaxy-stable:19.09
+  fi
 
 script:
 - bash run_tests_with_containers.sh
@@ -27,7 +27,7 @@ deploy:
   provider: pypi
   user: __token__
   password:
-    secure: MJ2TuwCVj7I1Xd2yJehwZyGJkCuHCaY5B2Sye7QQPu2vkPfpeq5tkfgyTG9sTLT5tl9i+nmH7hegSess+5YtaglGG2JnXmDgjKmUOuTzQUv3VLZRYRyHrUXO9RM3v8UA2VQJQls3yXkletKC/GcYM91WDpgaNaIQ/VsbTdd6YWflAtNj+DSctZAIXA2ofwhhSoYGnXuZFkEZU9xV4jjKU32UkGSY4GagQNWilPafzS/hOR22XauSugsJTW/5jru/9p/e+ic3Md6TFbGZ7JtJWVhX1+2TRIb5QMI78mDD+njeD2bB7F4EnGZrPKWI2PMpIX/L0fxyDwb7jZ0NKLCsUAWr2U+Nk6mzYar69jzYxStYoOGdgQvQqWT83fHSVad6n02zdjj/1Kcp25Lg+lTJEHxZCKerQ46MirtaX320WaEIQxlK0CaB/DLFDBdBEWP6jUL8RzqZ+idhXFlHAPw9jy3gzfwoSj89oRfggGOJo2vVTwgGzU5UYOY9OhLMF2/Brp7+oO/7NCdjsVGS63I1dqOi3NOQ5wioLiSiDJC1f2gyBZ4MeRuX0+W0ZJ7h6p1+iNs3IFLaMIDOEIH7aT7oaxar5tZHd7PxjzIxBBTgMJMHqrLalaMzB3V1VhzskmwmaJ5W6nQnThUzoAXJjEPkQTZ2JybNcKhRaXYtbLXfVXE=
+    secure: l56LHAWCd4LeG/+cHanG6bTavnnr6BwWwqD3KS4Dh2IzsSoeKimvUcRbF7A8ZbOGNkIQrStnyR+kn85DLtNPdFbdaBaAbWHHYj/2IkxdC5kTowCZkzPSWBJi23xNJzFiwtxIPkAhh1jWb9cKEIzM8PvUM3jOC7h2K7zYYt+U9Vnw8ur/zCo/BIFy+gaTllceoywwXbq3Q530PA4MZsrbuz7/Ik7Y9n1eLQv/JaZJ+Yx/FNzsL4EavzCngXY335ga7OHaS3xehzp3FriiDzoElI15d5N0ChI6pHgEu2VHX3IixZB9Cef7T2Vmpu3tV6G5bcQ6jGetGhajr1U2Kw+qXSuMzliekIqqKy0eWSenVhJoEWCwE25MaOeu+58jArlvtywaEcxWlRMR7MyekPDWqpqvc4NROJYQ2UND0LsNrtcN832j6mGxo650sE3JGIqayxFTuM/hVhGyqw/nvjAPYC/2hI+xIpldC4jfpQ0gms4HE6J7EqFsPRVBz5bGiYkqcZQCJXomnUcH9FWT33MqsZwB2twYVKjorYY8c5qWnC2thWK6whgdeS+/MD62LBBKzXaLtfSLihSBkO2UB2EdbsAw9j+5nIBPJJWJkmYh4yezE98A0PraI8nx2rC6crtBwm8bk19a4YOHEtnhKil/CinNG6+o4NEdzuzZzE4yxwM=
   distributions: sdist bdist_wheel
   on:
     branch: master
