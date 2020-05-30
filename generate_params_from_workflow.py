@@ -19,13 +19,11 @@ File galaxy_credentials.yml.sample must contain url and key.
 Output parameter file will be appended with workflow_filename as workflow_filename_parameters.json in output dir.
 """
 
-import json
 import argparse
 import os.path
 from bioblend.galaxy import GalaxyInstance
-import yaml
-import logging
-from sys import exit
+
+from wfexecutor import *
 
 
 def get_args():
@@ -47,34 +45,14 @@ def get_args():
                             action='store_true',
                             default=False,
                             help='Print debug information')
+    arg_parser.add_argument('--include-internals',
+                            action='store_true',
+                            default=False,
+                            help='Include internal parameters')
 
     args = arg_parser.parse_args()
     return args
 
-
-def get_instance(conf, name='__default'):
-    with open(os.path.expanduser(conf), mode='r') as fh:
-        data = yaml.load(fh)
-    assert name in data, 'unknown instance'
-    entry = data[name]
-    if isinstance(entry, dict):
-        return entry
-    else:
-        return data[entry]
-
-def read_json_file(json_file_path):
-    with open(json_file_path) as json_file:
-        json_obj = json.load(json_file)
-    return json_obj
-
-def get_workflow_from_file(gi, workflow_file):
-    import_workflow = [gi.workflows.import_workflow_from_local_path(file_local_path = workflow_file)]
-    return import_workflow
-
-def get_workflow_id(wf):
-    for wf_dic in wf:
-        wf_id = wf_dic['id']
-    return wf_id
 
 def set_logging_level(debug=False):
     logging.basicConfig(
@@ -84,7 +62,6 @@ def set_logging_level(debug=False):
 
 
 def main():
-    try:
         args = get_args()
         set_logging_level(args.debug)
 
@@ -101,23 +78,43 @@ def main():
         show_wf = gi.workflows.show_workflow(workflow_id)
 
         param = {}
-        for key, value in json_wf['steps'].iteritems():
+        for key, value in json_wf['steps'].items():
             if str(value['label']) != 'None':
-                step_id=key
-                step_name=value['label']
-                param.update({step_name: show_wf['steps'][step_id]['tool_inputs']})
+                step_id = key
+                step_name = value['label']
+                content = show_wf['steps'][step_id]['tool_inputs']
+                if 'parameter_type' in content:
+                    # treat simple input parameters differently
+                    logging.info("Step {} is a simple input parameter".format(step_name))
+                    content = ''
+                elif not args.include_internals:
+                    # if this is not a simple parameter (so a dict) and
+                    # we don't want to include __internal_parameters__
+                    delete_cks = []
+                    for ck, cv in content.items():
+                        if ck.startswith('__') and ck.endswith('__'):
+                            logging.info("In step {} parameter {} is internal".format(step_name, ck))
+                            delete_cks.append(ck)
+                            continue
+                        # and we want to remove parameters already defined by connections
+                        if isinstance(cv, Mapping):
+                            if '__class__' in cv:
+                                logging.info("In step {} parameter {} is a connector".format(step_name, ck))
+                                delete_cks.append(ck)
+                    for ck in delete_cks:
+                        del content[ck]
+                param.update({step_name: content})
 
-        param_file=(os.path.join(args.output_dir,os.path.basename(args.workflow).split('.')[0]) + "_parameters.json")
+        param_file = (os.path.join(args.output_dir, os.path.basename(args.workflow).split('.')[0]) + "_parameters.yaml")
         with open(param_file, 'w') as f:
-            json.dump(param, f, indent=4, sort_keys=True)
+            yaml.dump(param, f, indent=4, sort_keys=True)
             print("parameter output file : " + param_file)
 
         # delete workflow from galaxy instance
         logging.info("Deleting workflow...")
         gi.workflows.delete_workflow(workflow_id=workflow_id)
 
-    except:
-        exit(1)
+
 
 if __name__ == '__main__':
         main()

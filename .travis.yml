@@ -1,0 +1,34 @@
+sudo: required
+language: python
+python: 3.6
+services:
+  - docker
+
+cache:
+  directories:
+    - docker-cache
+
+before_script:
+  - |
+    filename=docker-cache/saved_images.tar
+    if [[ -f "$filename" ]]; then
+       docker load < "$filename";
+    else
+      mkdir -p docker-cache
+      docker pull bgruening/galaxy-stable:19.09
+      docker save -o "$filename" bgruening/galaxy-stable:19.09
+    fi
+
+script:
+- bash run_tests_with_containers.sh
+
+
+deploy:
+  provider: pypi
+  user: __token__
+  password:
+    secure: MJ2TuwCVj7I1Xd2yJehwZyGJkCuHCaY5B2Sye7QQPu2vkPfpeq5tkfgyTG9sTLT5tl9i+nmH7hegSess+5YtaglGG2JnXmDgjKmUOuTzQUv3VLZRYRyHrUXO9RM3v8UA2VQJQls3yXkletKC/GcYM91WDpgaNaIQ/VsbTdd6YWflAtNj+DSctZAIXA2ofwhhSoYGnXuZFkEZU9xV4jjKU32UkGSY4GagQNWilPafzS/hOR22XauSugsJTW/5jru/9p/e+ic3Md6TFbGZ7JtJWVhX1+2TRIb5QMI78mDD+njeD2bB7F4EnGZrPKWI2PMpIX/L0fxyDwb7jZ0NKLCsUAWr2U+Nk6mzYar69jzYxStYoOGdgQvQqWT83fHSVad6n02zdjj/1Kcp25Lg+lTJEHxZCKerQ46MirtaX320WaEIQxlK0CaB/DLFDBdBEWP6jUL8RzqZ+idhXFlHAPw9jy3gzfwoSj89oRfggGOJo2vVTwgGzU5UYOY9OhLMF2/Brp7+oO/7NCdjsVGS63I1dqOi3NOQ5wioLiSiDJC1f2gyBZ4MeRuX0+W0ZJ7h6p1+iNs3IFLaMIDOEIH7aT7oaxar5tZHd7PxjzIxBBTgMJMHqrLalaMzB3V1VhzskmwmaJ5W6nQnThUzoAXJjEPkQTZ2JybNcKhRaXYtbLXfVXE=
+  distributions: sdist bdist_wheel
+  on:
+    branch: master
+
