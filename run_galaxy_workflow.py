@@ -237,6 +237,8 @@ def main():
                          output_dir=args.output_dir, allowed_error_states=allowed_error_states,
                          use_names=True)
         logging.info('Results available.')
+        logging.info('Deleting state file {}'.format(args.state_file))
+        os.unlink(args.state_file)
 
         if not args.keep_histories:
             logging.info('Deleting histories...')
