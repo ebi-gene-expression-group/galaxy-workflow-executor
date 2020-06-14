@@ -246,8 +246,10 @@ def main():
 
         if args.publish:
             gi.histories.update_history(results['history_id'], published=True)
+            logging.info("Results history made public...")
         elif args.accessible:
             gi.histories.update_history(results['history_id'], importable=True)
+            logging.info("Results history made accesible...")
 
         if not args.keep_histories:
             logging.info('Deleting histories...')
