@@ -78,6 +78,10 @@ def get_args():
                             action='store_true',
                             default=False,
                             help="Keeps workflow created, it will be purged if not.")
+    arg_parser.add_argument('--publish', action='store_true',
+                            default=False, help="Keep result history and make it public/accesible.")
+    arg_parser.add_argument('--accessible', action='store_true',
+                            default=False, help="Keep result history and make it accessible via link only.")
     args = arg_parser.parse_args()
     return args
 
@@ -240,10 +244,19 @@ def main():
         logging.info('Deleting state file {}'.format(args.state_file))
         os.unlink(args.state_file)
 
+        if args.publish:
+            gi.histories.update_history(results['history_id'], published=True)
+            logging.info("Results history made public...")
+        elif args.accessible:
+            gi.histories.update_history(results['history_id'], importable=True)
+            logging.info("Results history made accesible...")
+
         if not args.keep_histories:
             logging.info('Deleting histories...')
             try:
-                gi.histories.delete_history(results['history_id'], purge=True)
+                if not args.publish and not args.accessible:
+                    logging.info("Not deleting results history as marked as shared or published...")
+                    gi.histories.delete_history(results['history_id'], purge=True)
                 if num_inputs > 0:
                     gi.histories.delete_history(history['id'], purge=True)
             except ConnectionError:
