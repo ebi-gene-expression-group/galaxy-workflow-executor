@@ -414,7 +414,6 @@ def produce_versions_file(gi, workflow_from_json, path):
                                                             ts_meta['changeset_revision'])
                 f.write("\t".join([label, tool['name'], tool['version'], url])+"\n")
                 tools_dict.append(step['tool_id'])
-                # tools_dict[step['tool_id']] = {'name': tool['name'], 'version': tool['version']}
 
 
 class ExecutionState(object):
@@ -445,5 +444,4 @@ class ExecutionState(object):
     def save_state(self):
         with open(self.path, mode='wb') as d:
             pickle.dump(self, d)
-
 
