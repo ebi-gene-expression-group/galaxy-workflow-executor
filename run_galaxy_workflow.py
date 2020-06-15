@@ -18,8 +18,6 @@ File inputs.yaml must contain paths to all input labels in the workflow.
 import argparse
 import os.path
 from sys import exit
-from collections.abc import Mapping
-import pickle
 from bioblend.galaxy import GalaxyInstance
 from bioblend import ConnectionError
 
@@ -67,6 +65,10 @@ def get_args():
                             required=False,
                             default=None,
                             help="Yaml file with allowed steps that can have errors."
+                            )
+    arg_parser.add_argument('-s', '--state-file',
+                            help="Path to read and save the execution state file.",
+                            default="exec_state.pickle"
                             )
     arg_parser.add_argument('-k', '--keep-histories',
                             action='store_true',
@@ -125,47 +127,63 @@ def main():
         gi = GalaxyInstance(ins['url'], key=ins['key'])
         validate_dataset_id_exists(gi, inputs_data)
 
+        state = ExecutionState.start(path=args.state_file)
+
         # Create new history to run workflow
-        logging.info('Create new history to run workflow ...')
-        if num_inputs > 0:
-            history = gi.histories.create_history(name=args.history)
+        if state.input_history is None:
+            logging.info('Create new history to run workflow ...')
+            if num_inputs > 0:
+                history = gi.histories.create_history(name=args.history)
+                state.input_history = history
+                state.save_state()
+        else:
+            logging.info('Using history available in state file')
+            history = state.input_history
 
         # get saved workflow defined in the galaxy instance
         logging.info('Workflow setup ...')
-        workflow = get_workflow_from_file(gi, workflow_file=args.workflow)
+        if state.wf_from_file is None:
+            workflow = get_workflow_from_file(gi, workflow_file=args.workflow)
+            state.wf_from_file = workflow
+            state.save_state()
+        else:
+            workflow = state.wf_from_file
         workflow_id = get_workflow_id(wf=workflow)
         show_wf = gi.workflows.show_workflow(workflow_id)
 
         # upload dataset to history
-        logging.info('Uploading dataset to history ...')
-        if num_inputs > 0:
-            datamap = load_input_files(gi, inputs=inputs_data,
-                                       workflow=show_wf, history=history)
+        if state.datamap is None:
+            logging.info('Uploading dataset to history ...')
+            if num_inputs > 0:
+                datamap = load_input_files(gi, inputs=inputs_data,
+                                           workflow=show_wf, history=history)
+            else:
+                datamap = {}
+            state.datamap = datamap
+            # set parameters
+            logging.info('Set parameters ...')
+            params = set_params(wf_from_json, param_data)
+            state.params = params
+            state.save_state()
         else:
-            datamap = {}
-        # set parameters
-        logging.info('Set parameters ...')
-        params = set_params(wf_from_json, param_data)
+            datamap = state.datamap
+            params = state.params
 
-        try:
-            logging.info('Running workflow {}...'.format(show_wf['name']))
-            results = gi.workflows.invoke_workflow(workflow_id=workflow_id,
-                                                   inputs=datamap,
-                                                   params=params,
-                                                   history_name=(args.history + '_results'))
-        except Exception as ce:
-            logging.error("Failure when invoking invoke workflows: {}".format(str(ce)))
-            raise ce
-
-        logging.debug("About to start serialization...")
-        try:
-            res_file_path = os.path.join(args.output_dir, args.history + '_results.bin')
-            binary_file = open(res_file_path, mode='wb')
-            pickle.dump(results, binary_file)
-            binary_file.close()
-            logging.info("State serialized for recovery at {}".format(str(res_file_path)))
-        except Exception as e:
-            logging.error("Failed to serialize (skipping)... {}".format(str(e)))
+        if state.results is None:
+            try:
+                logging.info('Running workflow {}...'.format(show_wf['name']))
+                results = gi.workflows.invoke_workflow(workflow_id=workflow_id,
+                                                       inputs=datamap,
+                                                       params=params,
+                                                       history_name=(args.history + '_results'))
+                state.results = results
+                state.save_state()
+            except Exception as ce:
+                logging.error("Failure when invoking invoke workflows: {}".format(str(ce)))
+                raise ce
+        else:
+            logging.info("Invocation result present in state, resuming that invocation")
+            results = state.results
 
         # Produce tool versions file
         produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
@@ -219,6 +237,8 @@ def main():
                          output_dir=args.output_dir, allowed_error_states=allowed_error_states,
                          use_names=True)
         logging.info('Results available.')
+        logging.info('Deleting state file {}'.format(args.state_file))
+        os.unlink(args.state_file)
 
         if not args.keep_histories:
             logging.info('Deleting histories...')
