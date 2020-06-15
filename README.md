@@ -1,9 +1,9 @@
 [![PyPI version fury.io](https://badge.fury.io/py/galaxy-workflow-executor.svg)](https://pypi.python.org/pypi/galaxy-workflow-executor/)
 [![Build Status](https://api.travis-ci.com/ebi-gene-expression-group/galaxy-workflow-executor.svg?branch=develop)](https://travis-ci.org/ebi-gene-expression-group/galaxy-workflow-executor)
 
-# Galaxy workflow executor 0.2
+# Galaxy workflow executor 0.2.1
 
-This setup uses bioblend (0.12 - 0.13 tested) to run a Galaxy workflow through the cli:
+This setup uses bioblend (0.12 - 0.13 tested) to run a Galaxy workflow through the CLI:
 
 - Inputs:
   - Galaxy workflow with steps annotated with labels as JSON file (MUST be obtained in Galaxy UI from Share Workflow -> Download).
@@ -19,6 +19,17 @@ for the steps where you want to be able to set parameters through the parameters
 dictionary. It should be the JSON file resulting from Workflows (upper menu) -> Share workflow
 (on the drop down menu of the workflow, in the workflow list) -> Download
 (in the following screen).
+
+# Execution state
+
+The setup will store the execution state during the run, so that if there are disconnection or errors, it can restart
+following the progress of the same workflow. It stores the state by default in the working directory, in
+`exec_state.pickle`. This might not be session proof: having a failure running workflow A, then trying to run a
+subsequent workflow B you might get errors. So when switching running workflows, make sure to use either different
+working directories or specify the path to the state path explicitly through `--state-file`. Please note that to specify
+this for a new run, the file is not expected to exist.
+
+The state file is deleted automatically on a successful execution.
 
 # Parameters YAML
 

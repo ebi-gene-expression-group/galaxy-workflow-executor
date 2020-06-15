@@ -7,6 +7,7 @@ import os.path
 from collections.abc import Mapping
 import yaml
 import json
+import pickle
 
 
 def get_instance(conf, name='__default'):
@@ -386,7 +387,6 @@ def process_allowed_errors(allowed_errors_dict, wf_from_json):
 
     return allowed_errors_state
 
-
 def produce_versions_file(gi, workflow_from_json, path):
     """
     Produces a tool versions file for the workflow run.
@@ -414,4 +414,34 @@ def produce_versions_file(gi, workflow_from_json, path):
                                                             ts_meta['changeset_revision'])
                 f.write("\t".join([label, tool['name'], tool['version'], url])+"\n")
                 tools_dict.append(step['tool_id'])
-                # tools_dict[step['tool_id']] = {'name': tool['name'], 'version': tool['version']}
+
+
+class ExecutionState(object):
+
+    wf_from_file = None
+    datamap = None
+    params = None
+    results = None
+    input_history = None
+
+    def __init__(self, path):
+        self.path = path
+
+    @staticmethod
+    def start(path):
+        if os.path.isfile(path):
+            try:
+                with open(path, mode='rb') as d:
+                    es = pickle.load(d)
+                    if type(es) is ExecutionState:
+                        return es
+                    else:
+                        logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
+            except Exception:
+                logging.warning("Could not read serialized file {}.".format(path))
+        return ExecutionState(path)
+
+    def save_state(self):
+        with open(self.path, mode='wb') as d:
+            pickle.dump(self, d)
+            
