@@ -10,7 +10,7 @@ print(find_packages())
 
 setup(
         name='galaxy-workflow-executor',
-        version='0.2.0',
+        version='0.2.1',
         description='Execute workflows on Galaxy through the CLI',
         long_description=readme(),
         packages=find_packages(),
