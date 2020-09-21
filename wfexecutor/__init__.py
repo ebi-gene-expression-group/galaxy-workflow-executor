@@ -163,6 +163,8 @@ def load_input_files(gi, inputs, workflow, history):
       type:
     input_label_c:
       dataset_id:
+    input_label_d:
+      collection_id:
 
     this makes it extensible to support
     :param gi: the galaxy instance (API object)
@@ -188,6 +190,11 @@ def load_input_files(gi, inputs, workflow, history):
             inputs_for_invoke[step] = {
                 'id': inputs[step_data['label']]['dataset_id'],
                 'src': 'hda'
+            }
+        elif step_data['label'] in inputs and 'collection_id' in inputs[step_data['label']]:
+            inputs_for_invoke[step] = {
+                'id': inputs[step_data['label']]['collection_id'],
+                'src': 'hdca'
             }
         elif step_data['label'] in inputs and not isinstance(inputs[step_data['label']], Mapping):
             # We are in the presence of a simple parameter input
