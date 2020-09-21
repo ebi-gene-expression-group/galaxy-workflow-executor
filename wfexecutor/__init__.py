@@ -90,8 +90,8 @@ def download_results(gi, history_id, output_dir, allowed_error_states, use_names
     used_names = set()
     for dataset in datasets:
         if dataset['type'] == 'file':
-            if dataset['id'] in allowed_error_states['datasets']:
-                logging.info('Skipping download of {} as it is an allowed failure.'
+            if dataset['state'] == 'error' and dataset['id'] in allowed_error_states['datasets']:
+                logging.info('Skipping download of failed {} as it is an allowed failure.'
                              .format(dataset['name']))
                 continue
             if use_names and dataset['name'] is not None and dataset['name'] not in used_names:
@@ -104,8 +104,8 @@ def download_results(gi, history_id, output_dir, allowed_error_states, use_names
                                              use_default_filename=True)
         elif dataset['type'] == 'collection':
             for ds_in_coll in dataset['elements']:
-                if ds_in_coll['object']['id'] in allowed_error_states['datasets']:
-                    logging.info('Skipping download of {} as it is an allowed failure.'
+                if ds_in_coll['object']['state'] == 'error' and ds_in_coll['object']['id'] in allowed_error_states['datasets']:
+                    logging.info('Skipping download of failed {} as it is an allowed failure.'
                                  .format(ds_in_coll['object']['name']))
                     continue
                 if use_names and ds_in_coll['object']['name'] is not None \
