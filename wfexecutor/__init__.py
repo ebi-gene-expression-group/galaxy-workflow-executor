@@ -302,15 +302,6 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
     # If there are allowed error states, check details
     if not error_state:
         for dataset_id in history['state_ids']['error']:
-            if dataset_id in allowed_error_states['datasets']:
-                continue
-            dataset = gi.datasets.show_dataset(dataset_id)
-            job = gi.jobs.show_job(dataset['creating_job'])
-            if job['tool_id'] in allowed_error_states['tools']:
-                allowed_error_states['datasets'].add(dataset_id)
-                # TODO decide based on individual error codes.
-                continue
-            logging.info("Tool {} is not marked as allowed to fail, but has failed.".format(job['tool_id']))
             # Sometimes transient error states will be found for jobs that are in the process
             # of being resubmitted. This part accounts for that, waiting for the state to go back
             # from error.
@@ -323,16 +314,33 @@ def completion_state(gi, history, allowed_error_states, wait_for_resubmission=Tr
                 if not ds['resubmitted']:
                     logging.info("Job was not resubmitted")
                     error_state = True
-                    break
                 elif ds['state'] != 'error':
                     logging.info("Job was resubmitted and is not in error any more...")
                 else:
-                    logging.info("Job was resubmitted at some point, but still shows to be in error state, failing")
+                    logging.info("Job was resubmitted at some point, but still shows to be in error state...")
                     error_state = True
-                    break
             else:
                 error_state = True
+
+            if error_state:
+                if dataset_id in allowed_error_states['datasets']:
+                    # if the dataset was already in allowed error states, then we know it doesn't represent
+                    # a complete workflow execution error
+                    error_state = False
+                    continue
+                dataset = gi.datasets.show_dataset(dataset_id)
+                job = gi.jobs.show_job(dataset['creating_job'])
+                if job['tool_id'] in allowed_error_states['tools']:
+                    allowed_error_states['datasets'].add(dataset_id)
+                    error_state = False
+                    # TODO decide based on individual error codes.
+                    continue
+                # The tool has failed and it wasn't allowed to fail, we signal this and we stop checking for errored
+                # datasets. This will signal the setup that we are in a terminal error state
+                logging.info("Tool {} is not marked as allowed to fail, but has failed.".format(job['tool_id']))
                 break
+
+
 
     # We separate completion from errors, so a workflow might have completed with or without errors
     # (this includes allowed errors). We say the workflow is in completed state when all datasets are in states:
