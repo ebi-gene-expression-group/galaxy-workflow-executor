@@ -50,8 +50,8 @@ def get_args():
                             required=True,
                             help='Workflow to run')
     arg_parser.add_argument('-P', '--parameters',
-                            default='',
-                            required=True,
+                            default=None,
+                            required=False,
                             help='parameters file, by default json')
     arg_parser.add_argument('--parameters-yaml',
                             default=False,
@@ -100,7 +100,10 @@ def main():
 
         # Load workflows, inputs and parameters
         wf_from_json = read_json_file(args.workflow)
-        param_data = read_yaml_file(args.parameters) if args.parameters_yaml else read_json_file(args.parameters)
+        if args.parameters:
+            param_data = read_yaml_file(args.parameters) if args.parameters_yaml else read_json_file(args.parameters)
+        else:
+            param_data = dict()
         inputs_data = read_yaml_file(args.yaml_inputs_path)
         allowed_error_states = {'tools': {}, 'datasets': set()}
         if args.allowed_errors is not None:
