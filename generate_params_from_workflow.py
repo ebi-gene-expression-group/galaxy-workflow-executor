@@ -82,6 +82,11 @@ def main():
             if str(value['label']) != 'None':
                 step_id = key
                 step_name = value['label']
+                # check for nested workflows
+                # don't need to extract anything as all parameters in nested wfs
+                # are set explicitly from the outer workflow
+                if show_wf['steps'][step_id]['type'] == 'subworkflow':
+                    continue
                 content = show_wf['steps'][step_id]['tool_inputs']
                 if 'parameter_type' in content:
                     # treat simple input parameters differently
