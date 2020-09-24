@@ -193,12 +193,8 @@ def main():
             results = state.results
 
         # Produce tool versions file
-        tool_table_path = "{}/software_versions_galaxy.txt".format(args.output_dir)
-        # remove file if exists already
-        if path.exists(tool_table_path):
-            remove(tool_table_path)
         produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
-                              path=tool_table_path)
+                              path="{}/software_versions_galaxy.txt".format(args.output_dir))
 
         # wait for a little while and check if the status is ok
         logging.info("Waiting for results to be available...")
