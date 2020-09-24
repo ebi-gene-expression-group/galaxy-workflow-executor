@@ -413,8 +413,8 @@ def produce_versions_file(gi, workflow_from_json, path, tools_dict=[]):
     :return:
     """
     # remove file if exists already; but not in recursive case
-    if path.exists(tool_table_path) and tools_dict:
-        remove(tool_table_path)
+    if path.exists(path) and tools_dict:
+        remove(path)
 
     with open(file=path, mode="a") as f:
         # write header only if file is empty
