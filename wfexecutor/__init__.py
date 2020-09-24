@@ -423,7 +423,7 @@ def produce_versions_file(gi, workflow_from_json, path, tools_dict=[]):
                 subworkflow = step['subworkflow']
                 produce_versions_file(gi, subworkflow, path, tools_dict)
                 # subworkflows don't have meaningful tool ids
-                step['tool_id'] = None
+                continue
             # Input steps won't have tool ids, and we only need each tool once.
             if step['tool_id'] is not None and step['tool_id'] not in tools_dict:
                 tool = gi.tools.show_tool(step['tool_id'])
