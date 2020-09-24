@@ -402,7 +402,7 @@ def process_allowed_errors(allowed_errors_dict, wf_from_json):
 
     return allowed_errors_state
 
-def produce_versions_file(gi, workflow_from_json, path, tools_dict):
+def produce_versions_file(gi, workflow_from_json, path, tools_dict=[]):
     """
     Produces a tool versions file for the workflow run.
 
