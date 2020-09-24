@@ -193,7 +193,6 @@ def main():
             results = state.results
 
         # Produce tool versions file
-        tools_dict = []
         produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
                               path="{}/software_versions_galaxy.txt".format(args.output_dir),
                               tools_dict=tools_dict)
@@ -295,6 +294,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
 
