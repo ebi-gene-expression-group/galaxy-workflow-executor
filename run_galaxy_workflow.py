@@ -16,7 +16,7 @@ File inputs.yaml must contain paths to all input labels in the workflow.
 """
 
 import argparse
-import os.path
+from os import path, remove
 from sys import exit
 from bioblend.galaxy import GalaxyInstance
 from bioblend import ConnectionError
@@ -193,8 +193,12 @@ def main():
             results = state.results
 
         # Produce tool versions file
+        tool_table_path = "{}/software_versions_galaxy.txt".format(args.output_dir)
+        # remove file if exists already
+        if path.exists(tool_table_path):
+            remove(tool_table_path)
         produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
-                              path="{}/software_versions_galaxy.txt".format(args.output_dir))
+                              path=tool_table_path)
 
         # wait for a little while and check if the status is ok
         logging.info("Waiting for results to be available...")
