@@ -193,8 +193,10 @@ def main():
             results = state.results
 
         # Produce tool versions file
+        tools_dict = []
         produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
-                              path="{}/software_versions_galaxy.txt".format(args.output_dir))
+                              path="{}/software_versions_galaxy.txt".format(args.output_dir),
+                              tools_dict=tools_dict)
 
         # wait for a little while and check if the status is ok
         logging.info("Waiting for results to be available...")
