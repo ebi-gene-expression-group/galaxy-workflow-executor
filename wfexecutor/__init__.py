@@ -402,30 +402,30 @@ def process_allowed_errors(allowed_errors_dict, wf_from_json):
 
     return allowed_errors_state
 
-def produce_versions_file(gi, workflow_from_json, path, tools_dict=[]):
+def produce_versions_file(gi, workflow_from_json, table_path, tools_dict=[]):
     """
     Produces a tool versions file for the workflow run.
 
     :param gi:
     :param workflow_from_json:
-    :param path: path where to save the versions file
+    :param table_path: path where to save the versions file
     :param tools_dict: list of tools used in the workflow
     :return:
     """
     # remove file if exists already; but not in recursive case
-    if path.exists(path) and tools_dict:
-        remove(path)
+    if os.path.exists(table_path) and tools_dict:
+        os.remove(table_path)
 
-    with open(file=path, mode="a") as f:
+    with open(file=table_path, mode="a") as f:
         # write header only if file is empty
-        if os.stat(path).st_size == 0:
+        if os.stat(table_path).st_size == 0:
             f.write("\t".join(["Analysis", "Software", "Version", "Citation"])+"\n")
 
         for key, step in sorted(workflow_from_json['steps'].items(), reverse=True):
             # parse sub-workflows recursively
             if "subworkflow" in step.keys():
                 subworkflow = step['subworkflow']
-                produce_versions_file(gi, subworkflow, path, tools_dict)
+                produce_versions_file(gi, subworkflow, table_path, tools_dict)
                 # subworkflows don't have meaningful tool ids
                 continue
             # Input steps won't have tool ids, and we only need each tool once.
