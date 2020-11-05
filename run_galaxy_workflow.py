@@ -218,7 +218,7 @@ def main():
                 logging.info(f"Invocation id: {invocation['id']}")
                 exit(4)
             if invocation['state'] == 'failed':
-                logging.error("Invocation was failed... exiting.")
+                logging.error("Invocation failed... exiting.")
                 logging.info(f"Invocation id: {invocation['id']}")
                 exit(5)
             if invocation['state'] == 'scheduled':
