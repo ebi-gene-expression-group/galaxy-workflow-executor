@@ -123,6 +123,8 @@ Currently produced error codes:
 | Error code | Description |
 |------------|-------------|
 | 3          | Connection error during history deletion, this is not a critical error as most probably the history will get deleted by the server. A file named histories_to_check.txt is created in the working directory. Data will have been downloaded by then. |
+| 4          | Workflow scheduling cancelled at the Galaxy instance. Currently no downloads or clean-up done. This is probably an error that you cannot recover automatically from. |
+| 5          | Workflow scheduling failed at the Galaxy instance. Currently no downloads or clean-up done. This is probably an error that you cannot recover automatically from. |
 
 
 

@@ -210,11 +210,19 @@ def main():
         # wait until workflow invocation is fully scheduled, cancelled of failed
         while True:
             invocation = gi.workflows.show_invocation(workflow_id=results['workflow_id'], invocation_id=results['id'])
-            if invocation['state'] in ['scheduled', 'cancelled', 'failed']:
-                # These are the terminal states of the invocation process. Scheduled means that all jobs needed for the
-                # workflow have been scheduled, not that the workflow is finished. However, there is no point in
-                # checking completion through history elements if this hasn't happened yet.
-                logging.info("Workflow invocation has entered a terminal state: {}".format(invocation['state']))
+            # These are the terminal states of the invocation process. Scheduled means that all jobs needed for the
+            # workflow have been scheduled, not that the workflow is finished. However, there is no point in
+            # checking completion through history elements if this hasn't happened yet.
+            if invocation['state'] == 'cancelled':
+                logging.error("Invocation was cancelled... exiting.")
+                logging.info(f"Invocation id: {invocation['id']}")
+                exit(4)
+            if invocation['state'] == 'failed':
+                logging.error("Invocation failed... exiting.")
+                logging.info(f"Invocation id: {invocation['id']}")
+                exit(5)
+            if invocation['state'] == 'scheduled':
+                logging.info(f"Workflow invocation has entered a terminal state: {invocation['state']}")
                 logging.info("Proceeding to check individual jobs state to determine completion or failure...")
                 break
             time.sleep(10)
