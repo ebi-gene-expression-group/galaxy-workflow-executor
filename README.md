@@ -1,7 +1,7 @@
 [![PyPI version fury.io](https://badge.fury.io/py/galaxy-workflow-executor.svg)](https://pypi.python.org/pypi/galaxy-workflow-executor/)
 [![Build Status](https://api.travis-ci.com/ebi-gene-expression-group/galaxy-workflow-executor.svg?branch=develop)](https://travis-ci.org/ebi-gene-expression-group/galaxy-workflow-executor)
 
-# Galaxy workflow executor 0.2.3
+# Galaxy workflow executor 0.2.4
 
 This setup uses bioblend (0.12 - 0.13 tested) to run a Galaxy workflow through the CLI:
 
@@ -123,6 +123,8 @@ Currently produced error codes:
 | Error code | Description |
 |------------|-------------|
 | 3          | Connection error during history deletion, this is not a critical error as most probably the history will get deleted by the server. A file named histories_to_check.txt is created in the working directory. Data will have been downloaded by then. |
+| 4          | Workflow scheduling cancelled at the Galaxy instance. Currently no downloads or clean-up done. This is probably an error that you cannot recover automatically from. |
+| 5          | Workflow scheduling failed at the Galaxy instance. Currently no downloads or clean-up done. This is probably an error that you cannot recover automatically from. |
 
 
 
