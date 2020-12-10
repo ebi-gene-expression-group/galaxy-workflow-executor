@@ -1,7 +1,7 @@
 [![PyPI version fury.io](https://badge.fury.io/py/galaxy-workflow-executor.svg)](https://pypi.python.org/pypi/galaxy-workflow-executor/)
 [![Build Status](https://api.travis-ci.com/ebi-gene-expression-group/galaxy-workflow-executor.svg?branch=develop)](https://travis-ci.org/ebi-gene-expression-group/galaxy-workflow-executor)
 
-# Galaxy workflow executor 0.2.3
+# Galaxy workflow executor 0.2.4
 
 This setup uses bioblend (0.12 - 0.13 tested) to run a Galaxy workflow through the CLI:
 
