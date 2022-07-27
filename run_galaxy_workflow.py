@@ -134,8 +134,9 @@ def main():
         gi = GalaxyInstance(ins['url'], key=ins['key'])
         validate_dataset_id_exists(gi, inputs_data)
 
-        state = ExecutionState.start(path=args.state_file,
+        state = ExecutionState.start(state_path=args.state_file,
                                      workflow_path=args.workflow,
+                                     inputs_path=args.yaml_inputs_path,
                                      parameters_path=args.parameters)
 
         # Create new history to run workflow

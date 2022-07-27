@@ -451,10 +451,22 @@ class ExecutionState(object):
     results = None
     input_history = None
 
-    def __init__(self, state_path, workflow_path, parameters_path):
+    def __init__(self, state_path, workflow_path, inputs_path, parameters_path):
         self.state_path = state_path
         self.workflow_hex = self.get_file_md5(workflow_path)
-        self.parameters_hex = self.get_file_md5(parameters_path)
+        self.inputs_hex = self.get_file_md5(inputs_path)
+        self.parameters_hex = self.get_file_md5(parameters_path) if parameters_path is not None else parameters_path
+
+    def check_md5(self, workflow_path, inputs_path, parameters_path):
+        if ExecutionState.get_file_md5(workflow_path) != self.workflow_hex:
+            logging.warning("There are changes in the workflow file. "
+                            "Delete .pickle file if you want to run workflow from the beginning.")
+        if ExecutionState.get_file_md5(inputs_path) != self.inputs_hex:
+            logging.warning("There are changes in the input file. "
+                            "Delete .pickle file if you want to run workflow from the beginning.")
+        if ExecutionState.get_file_md5(parameters_path) != self.parameters_hex:
+            logging.warning("There are changes in the parameters file. "
+                            "Delete .pickle file if you want to run workflow from the beginning.")
 
     @staticmethod
     def get_file_md5(file_path):
@@ -462,25 +474,20 @@ class ExecutionState(object):
             return md5(f.read()).hexdigest()
 
     @staticmethod
-    def start(state_path, workflow_path, parameters_path):
+    def start(state_path, workflow_path, inputs_path, parameters_path):
         if os.path.isfile(state_path):
             try:
                 with open(state_path, mode='rb') as d:
                     es = pickle.load(d)
                     if type(es) is ExecutionState:
                         # Check if there are any changes in the parameters and workflow files
-                        if ExecutionState.get_file_md5(workflow_path) != es.workflow_hex:
-                            logging.warning(f"The workflow file's ({workflow_path}) changed from the previous run. "
-                                            "Delete .pickle file if you want to run workflow from the beginning.")
-                        if ExecutionState.get_file_md5(parameters_path) != es.parameters_hex:
-                            logging.warning(f"The para file's ({parameters_path}) changed from the previous run. "
-                                            "Delete .pickle file if you want to run workflow from the beginning.")
+                        es.check_md5(workflow_path, inputs_path, parameters_path)
                         return es
                     else:
                         logging.warning("The provided file {} does not have an ExecutionState object serialised".format(state_path))
             except Exception:
                 logging.warning("Could not read serialized file {}.".format(state_path))
-        return ExecutionState(state_path, workflow_path, parameters_path)
+        return ExecutionState(state_path, workflow_path, inputs_path, parameters_path)
 
     def save_state(self):
         with open(self.state_path, mode='wb') as d:
