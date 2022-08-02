@@ -464,7 +464,7 @@ class ExecutionState(object):
         if ExecutionState.get_file_md5(inputs_path) != self.inputs_hex:
             logging.warning("There are changes in the input file. "
                             "Delete .pickle file if you want to run workflow from the beginning.")
-        if ExecutionState.get_file_md5(parameters_path) != self.parameters_hex:
+        if (parameters_path is not None) and (ExecutionState.get_file_md5(parameters_path) != self.parameters_hex):
             logging.warning("There are changes in the parameters file. "
                             "Delete .pickle file if you want to run workflow from the beginning.")
 
@@ -480,7 +480,7 @@ class ExecutionState(object):
                 with open(state_path, mode='rb') as d:
                     es = pickle.load(d)
                     if type(es) is ExecutionState:
-                        # Check if there are any changes in the parameters and workflow files
+                        # Check if there are any changes in the parameters, inputs and workflow files
                         es.check_md5(workflow_path, inputs_path, parameters_path)
                         return es
                     else:
