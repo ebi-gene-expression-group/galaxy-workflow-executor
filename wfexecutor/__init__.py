@@ -487,6 +487,7 @@ class ExecutionState(object):
                         logging.warning("The provided file {} does not have an ExecutionState object serialised".format(state_path))
             except Exception:
                 logging.warning("Could not read serialized file {}.".format(state_path))
+                logging.exception("message")
         return ExecutionState(state_path, workflow_path, inputs_path, parameters_path)
 
     def save_state(self):
