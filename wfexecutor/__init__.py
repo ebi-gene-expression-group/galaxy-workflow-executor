@@ -182,7 +182,7 @@ def load_input_files(gi, inputs, workflow, history):
             upload_res = gi.tools.upload_file(path=inputs[step_data['label']]['path'], history_id=history['id'],
                                               file_name=step_data['label'],
                                               file_type=inputs[step_data['label']]['type'])
-            gi.datasets.update_dataset(upload_res['outputs'][0]['id'], name=step_data['label'], meta={'header': True})
+            gi.histories.update_dataset(upload_res['outputs'][0]['id'], name=step_data['label'], meta={'header': True})
             
             inputs_for_invoke[step] = {
                     'id': upload_res['outputs'][0]['id'],
