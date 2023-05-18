@@ -186,7 +186,8 @@ def load_input_files(gi, inputs, workflow, history):
             dataset_details = gi.datasets.show_dataset(upload_res['outputs'][0]['id'])
             
             dataset_details['misc_info'] = json.dumps({'header': True})  # Set to True if your dataset has a header, False otherwise
-            
+            logging.info(upload_res['outputs'][0]['id'])
+            logging.info(dataset_details)
             gi.histories.update_dataset(dataset_id=upload_res['outputs'][0]['id'], **dataset_details)
             
             inputs_for_invoke[step] = {
