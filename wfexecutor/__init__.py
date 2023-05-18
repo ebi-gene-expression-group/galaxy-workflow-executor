@@ -182,7 +182,7 @@ def load_input_files(gi, inputs, workflow, history):
             upload_res = gi.tools.upload_file(path=inputs[step_data['label']]['path'], history_id=history['id'],
                                               file_name=step_data['label'],
                                               file_type=inputs[step_data['label']]['type'],
-                                              'header'= True)
+                                              header=True)
             
             dataset_details = gi.datasets.show_dataset(upload_res['outputs'][0]['id'])
             
