@@ -115,6 +115,8 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 
                 logging.info(uploaded_dataset[0]['id'])
                 
+                logging.info('gi.libraries.update_library_dataset({}, {})'dataset_id=uploaded_dataset[0]['id'], name=dataset['name'])
+
                 gi.libraries.update_library_dataset(dataset_id=uploaded_dataset[0]['id'], name=dataset['name'])
 
 #         elif dataset['type'] == 'collection':
