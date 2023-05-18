@@ -73,7 +73,56 @@ def get_run_state(gi, results):
     return state
 
 
-def download_results(gi, history_id, output_dir, allowed_error_states, use_names=False):
+def download_results(gi, history_id, lib_id, folder_name, allowed_error_states):
+    """
+    Downloads results from a given Galaxy instance and history to a specified filesystem location.
+
+    :param gi: galaxy instance object
+    :param history_id: ID of the history from where results should be retrieved.
+    :param output_dir: path to where result file should be written.
+    :param allowed_error_states: dictionary with elements known to be allowed to fail.
+    :return:
+    """
+    datasets = gi.histories.show_history(history_id,
+                                         contents=True,
+                                         visible=True, details='all')
+    
+    for dataset in datasets:
+        if dataset['type'] == 'file':
+            if dataset['state'] == 'error' and dataset['id'] in allowed_error_states['datasets']:
+                logging.info('Skipping upload of failed {} as it is an allowed failure.'
+                             .format(dataset['name']))
+                continue
+            if dataset['name'] is not None:
+                
+                file_path = dataset['file_name']
+                
+                folder = gi.libraries.get_folders(library_id=lib_id, name='/'+folder_name)
+                
+                if folder == []:
+                    folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, name='/'+folder_name)
+                
+                folder_id = folder[0]['id']
+                
+                uploaded_dataset = gi.libraries.upload_from_galaxy_filesystem(lib_id, file_path, folder_id=folder_id)
+                
+                gi.libraries.update_library_dataset(dataset_id=uploaded_dataset['id'], name=dataset['name'])
+
+#         elif dataset['type'] == 'collection':
+#             for ds_in_coll in dataset['elements']:
+#                 if ds_in_coll['object']['state'] == 'error' and ds_in_coll['object']['id'] in allowed_error_states['datasets']:
+#                     logging.info('Skipping upload of failed {} as it is an allowed failure.'
+#                                  .format(ds_in_coll['object']['name']))
+#                     continue
+#                 if ds_in_coll['object']['name'] is not None:
+#                     # TODO it fails here to download if it is in 'error' state
+#                     gi.datasets.download_dataset(ds_in_coll['object']['id'],
+#                                                  file_path=os.path.join(output_dir, ds_in_coll['object']['name']),
+#                                                  use_default_filename=False)
+#                     used_names.add(ds_in_coll['object']['name'])
+
+
+def export_results_to_data_library(gi, history_id, output_dir, allowed_error_states, use_names=False):
     """
     Downloads results from a given Galaxy instance and history to a specified filesystem location.
 
@@ -119,6 +168,7 @@ def download_results(gi, history_id, output_dir, allowed_error_states, use_names
                     gi.datasets.download_dataset(ds_in_coll['object']['id'],
                                                  file_path=output_dir,
                                                  use_default_filename=True)
+
 
 
 def set_params(json_wf, param_data):
