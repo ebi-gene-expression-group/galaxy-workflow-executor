@@ -102,7 +102,7 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 folder = gi.libraries.get_folders(library_id=lib_id, name='/'+folder_name)
                 
                 if folder == []:
-                    folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, name='/'+folder_name)
+                    folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name='/'+folder_name)
                 
                 folder_id = folder[0]['id']
                 
