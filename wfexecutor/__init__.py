@@ -73,7 +73,7 @@ def get_run_state(gi, results):
     return state
 
 
-def download_results(gi, history_id, lib_id, folder_name, allowed_error_states):
+def export_results_to_data_library(gi, history_id, lib_id, folder_name, allowed_error_states):
     """
     Downloads results from a given Galaxy instance and history to a specified filesystem location.
 
@@ -122,7 +122,7 @@ def download_results(gi, history_id, lib_id, folder_name, allowed_error_states):
 #                     used_names.add(ds_in_coll['object']['name'])
 
 
-def export_results_to_data_library(gi, history_id, output_dir, allowed_error_states, use_names=False):
+def download_results(gi, history_id, output_dir, allowed_error_states, use_names=False):
     """
     Downloads results from a given Galaxy instance and history to a specified filesystem location.
 
