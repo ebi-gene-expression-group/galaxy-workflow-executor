@@ -248,6 +248,8 @@ def main():
 
         # Download results
         logging.info('Downloading results ...')
+        logging.info(results)
+        
         download_results(gi, history_id=results['history_id'],
                          output_dir=args.output_dir, allowed_error_states=allowed_error_states,
                          use_names=True)
