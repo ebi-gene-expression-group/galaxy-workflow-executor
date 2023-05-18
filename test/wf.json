@@ -144,7 +144,7 @@
             }, 
             "post_job_actions": {}, 
             "tool_id": "Show beginning1", 
-            "tool_state": "{\"__page__\": null, \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"lineNum\": \"\\\"2\\\"\"}", 
+            "tool_state": "{\"header\": \"false\",\"__page__\": null, \"input\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"lineNum\": \"\\\"2\\\"\"}", 
             "tool_version": "1.0.0", 
             "type": "tool", 
             "uuid": "3c9bd01e-b4f9-432e-8715-d4d095a9c94c", 
