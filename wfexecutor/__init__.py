@@ -73,7 +73,7 @@ def get_run_state(gi, results):
     return state
 
 
-def export_results_to_data_library(gi, history_id, lib_id, folder_name, allowed_error_states):
+def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states):
     """
     Downloads results from a given Galaxy instance and history to a specified filesystem location.
 
@@ -96,6 +96,8 @@ def export_results_to_data_library(gi, history_id, lib_id, folder_name, allowed_
             if dataset['name'] is not None:
                 
                 file_path = dataset['file_name']
+                
+                folder_name = "results"
                 
                 folder = gi.libraries.get_folders(library_id=lib_id, name='/'+folder_name)
                 
