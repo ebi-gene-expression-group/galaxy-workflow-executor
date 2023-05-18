@@ -257,7 +257,7 @@ def main():
               logging.info('Uploading results to Library')
               lib_id = gi.libraries.get_libraries(name=args.library_name)[0]['id']
               if lib_id:
-                     export_results_to_data_library(gi, history_id=results['history_id'], lib_id, allowed_error_states)
+                     export_results_to_data_library(gi=gi, history_id=results['history_id'], lib_id=lib_id, allowed_error_states=allowed_error_states)
               else:
                      logging.error('Library {} not found, results not uploaded to library'.args.library_name)
         
