@@ -198,7 +198,8 @@ def main():
             results = state.results
 
         # Produce tool versions file
-        produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
+        if args.output_dir:
+              produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
                               table_path="{}/software_versions_galaxy.txt".format(args.output_dir))
         
         # wait for a little while and check if the status is ok
