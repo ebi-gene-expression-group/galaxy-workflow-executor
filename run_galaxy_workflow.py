@@ -262,7 +262,7 @@ def main():
                      logging.error('Library {} not found, results not uploaded to library'.args.library_name)
         
         # Download results
-        if args.library_name:
+        if args.output_dir:
               logging.info('Downloading results ...')
               download_results(gi, history_id=results['history_id'],
                                 output_dir=args.output_dir, allowed_error_states=allowed_error_states,
