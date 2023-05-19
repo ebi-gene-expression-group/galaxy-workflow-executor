@@ -262,12 +262,17 @@ def main():
             gi.histories.update_history(results['history_id'], importable=True)
             logging.info("Results history made accesible...")
 
-        if not args.keep_histories:
+        if args.keep_histories:
+            logging.info('Keeping history but purging deleted dataset...')
+            gi.histories.purge_deleted_datasets(results['history_id'], purge_histories=False)
+        else:
             logging.info('Deleting histories...')
             try:
                 if not args.publish and not args.accessible:
-                    logging.info("Not deleting results history as marked as shared or published...")
+                    logging.info("Deleting results history because not marked as shared or published...")
                     gi.histories.delete_history(results['history_id'], purge=True)
+                else:
+                    logging.info("Not deleting results history as marked as shared or published...")
                 if num_inputs > 0:
                     gi.histories.delete_history(history['id'], purge=True)
             except ConnectionError:
@@ -283,6 +288,7 @@ def main():
                              "and there is no reason not to proceed with any posterior analysis")
                 exit(3)
             logging.info('Histories purged...')
+       
 
         if not args.keep_workflow:
             logging.info('Deleting workflow...')
