@@ -262,10 +262,11 @@ def main():
                      logging.error('Library {} not found, results not uploaded to library'.args.library_name)
         
         # Download results
-        logging.info('Downloading results ...')
-        download_results(gi, history_id=results['history_id'],
-                         output_dir=args.output_dir, allowed_error_states=allowed_error_states,
-                         use_names=True)
+        if args.library_name:
+              logging.info('Downloading results ...')
+              download_results(gi, history_id=results['history_id'],
+                                output_dir=args.output_dir, allowed_error_states=allowed_error_states,
+                                use_names=True)
         logging.info('Results available.')
         logging.info('Deleting state file {}'.format(args.state_file))
         os.unlink(args.state_file)
