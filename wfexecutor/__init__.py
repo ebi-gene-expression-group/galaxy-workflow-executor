@@ -97,7 +97,7 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 
                 file_path = dataset['file_name']
                 
-                folder_name = "results"
+                folder_name = gi.histories.show_history(history_id)['name']
                 
                 folder = gi.libraries.get_folders(library_id=lib_id, name='/'+folder_name)
                 
