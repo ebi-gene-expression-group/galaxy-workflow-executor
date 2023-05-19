@@ -278,7 +278,10 @@ def main():
             gi.histories.update_history(results['history_id'], importable=True)
             logging.info("Results history made accesible...")
 
-        if not args.keep_histories:
+        if args.keep_histories:
+            logging.info('Keeping histories, but purging deleted dataset')
+            gi.histories.purge_deleted_datasets(results['history_id'], purge_histories=False)
+        else:
             logging.info('Deleting histories...')
             try:
                 if not args.publish and not args.accessible:
