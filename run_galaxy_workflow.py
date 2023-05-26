@@ -280,7 +280,11 @@ def main():
 
         if args.keep_histories:
             logging.info('Keeping histories, but purging deleted dataset')
-            gi.histories.purge_deleted_datasets(results['history_id'], purge_histories=False)
+            datasets_to_purge = gi.histories.show_history(results['history_id'], contents=True, deleted=True)
+            for dataset in datasets_to_purge:
+              if dataset['deleted']:
+                gi.histories.delete_dataset(results['history_id'], dataset['id'], purge=True)
+            #gi.histories.purge_deleted_datasets(results['history_id'], purge_histories=False)
         else:
             logging.info('Deleting histories...')
             try:
