@@ -199,6 +199,11 @@ def load_input_files(gi, inputs, workflow, history):
         elif step_data['label'] in inputs and not isinstance(inputs[step_data['label']], Mapping):
             # We are in the presence of a simple parameter input
             inputs_for_invoke[step] = inputs[step_data['label']]
+        elif step_data['label'] in inputs and 'library_id' in inputs[step_data['label']]:
+             inputs_for_invoke[step] = {
+                 'id': inputs[step_data['label']]['library_id'],
+                 'src': 'ldda'
+             }
         else:
             raise ValueError("Label '{}' is not present in inputs yaml".format(step_data['label']))
 
