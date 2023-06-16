@@ -1,3 +1,2 @@
 text_input:
-  path: test/file_with_2_cols.tsv
-  type: tabular
+  dataset_id: 72d451d0c6fac862
