@@ -27,7 +27,9 @@ echo "Library ID: $library_id"
 command="parsec -g test -f test/parsec_creds.yaml libraries upload_file_from_local_path --file_type tabular $library_id test/file_with_2_cols.txt"
 echo "Command: $command"
 ls -l test/file_with_2_cols.txt
-file_library_id=$(parsec -g test -f test/parsec_creds.yaml libraries upload_file_from_local_path --file_type tabular $library_id test/file_with_2_cols.txt | jq '.[] | select(.name=="file_with_2_cols.txt") | .id' | sed s/\"//g) 
+parsec -g test -f test/parsec_creds.yaml libraries upload_file_from_local_path --file_type tabular $library_id test/file_with_2_cols.txt
+# file_library_id=$(parsec -g test -f test/parsec_creds.yaml libraries upload_file_from_local_path --file_type tabular $library_id test/file_with_2_cols.txt | jq '.[] | select(.name=="file_with_2_cols.txt") | .id' | sed s/\"//g) 
+exit 1
 echo "File library ID: $file_library_id"
 
 sed "s/<INPUT_TO_MERGE_LIBRARY_ID>/$file_library_id/" test/wf_inputs.yaml.template > test/wf_inputs.yaml
