@@ -1,237 +1,211 @@
 {
-    "a_galaxy_workflow": "true",
-    "annotation": "",
-    "format-version": "0.1",
-    "name": "simple test workflow",
+    "a_galaxy_workflow": "true", 
+    "annotation": "", 
+    "format-version": "0.1", 
+    "name": "simple test workflow", 
     "steps": {
         "0": {
-            "annotation": "",
-            "content_id": null,
-            "errors": null,
-            "id": 0,
-            "input_connections": {},
-            "inputs": [
-                {
-                    "description": "",
-                    "name": "cut_parameter"
-                }
-            ],
-            "label": "cut_parameter",
-            "name": "Input parameter",
-            "outputs": [],
+            "annotation": "", 
+            "content_id": null, 
+            "errors": null, 
+            "id": 0, 
+            "input_connections": {}, 
+            "inputs": [], 
+            "label": "cut_parameter", 
+            "name": "Input parameter", 
+            "outputs": [], 
             "position": {
-                "left": 0,
+                "left": 0, 
                 "top": 0
-            },
-            "tool_id": null,
-            "tool_state": "{\"parameter_type\": \"text\", \"optional\": false}",
-            "tool_version": null,
-            "type": "parameter_input",
-            "uuid": "0dabb9e2-8705-471d-b411-9c6846a76640",
+            }, 
+            "tool_id": null, 
+            "tool_state": "{\"optional\": false, \"parameter_type\": \"text\"}", 
+            "tool_version": null, 
+            "type": "parameter_input", 
+            "uuid": "0dabb9e2-8705-471d-b411-9c6846a76640", 
             "workflow_outputs": [
                 {
-                    "label": null,
-                    "output_name": "output",
+                    "label": null, 
+                    "output_name": "output", 
                     "uuid": "9f406e1a-765f-4956-988d-52a774600b35"
                 }
             ]
-        },
+        }, 
         "1": {
-            "annotation": "",
-            "content_id": null,
-            "errors": null,
-            "id": 1,
-            "input_connections": {},
-            "inputs": [
-                {
-                    "description": "",
-                    "name": "text_input"
-                }
-            ],
-            "label": "text_input",
-            "name": "Input dataset",
-            "outputs": [],
+            "annotation": "", 
+            "content_id": null, 
+            "errors": null, 
+            "id": 1, 
+            "input_connections": {}, 
+            "inputs": [], 
+            "label": "text_input", 
+            "name": "Input dataset", 
+            "outputs": [], 
             "position": {
-                "left": 3,
+                "left": 3, 
                 "top": 111
-            },
-            "tool_id": null,
-            "tool_state": "{\"optional\": false, \"tag\": \"\"}",
-            "tool_version": null,
-            "type": "data_input",
-            "uuid": "1b2f2147-d854-40d8-9f00-a84ba2ec91f1",
+            }, 
+            "tool_id": null, 
+            "tool_state": "{\"tag\": \"\", \"optional\": false}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "uuid": "1b2f2147-d854-40d8-9f00-a84ba2ec91f1", 
             "workflow_outputs": []
-        },
+        }, 
         "2": {
-            "annotation": "",
-            "content_id": null,
-            "errors": null,
-            "id": 2,
-            "input_connections": {},
-            "inputs": [
-                {
-                    "description": "",
-                    "name": "text_input_to_merge"
-                }
-            ],
-            "label": "text_input_to_merge",
-            "name": "Input dataset",
-            "outputs": [],
+            "annotation": "", 
+            "content_id": null, 
+            "errors": null, 
+            "id": 2, 
+            "input_connections": {}, 
+            "inputs": [], 
+            "label": "text_input_to_merge", 
+            "name": "Input dataset", 
+            "outputs": [], 
             "position": {
-                "left": 8,
+                "left": 8, 
                 "top": 246
-            },
-            "tool_id": null,
-            "tool_state": "{\"optional\": false, \"tag\": \"\"}",
-            "tool_version": null,
-            "type": "data_input",
-            "uuid": "5b6aee0b-c126-4d09-b4de-bf21bfaf0a84",
+            }, 
+            "tool_id": null, 
+            "tool_state": "{\"tag\": \"\", \"optional\": false}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "uuid": "5b6aee0b-c126-4d09-b4de-bf21bfaf0a84", 
             "workflow_outputs": [
                 {
-                    "label": null,
-                    "output_name": "output",
+                    "label": null, 
+                    "output_name": "output", 
                     "uuid": "6a4b5779-8369-40b5-8922-d779401aa524"
                 }
             ]
-        },
+        }, 
         "3": {
-            "annotation": "",
-            "content_id": "Cut1",
-            "errors": null,
-            "id": 3,
+            "annotation": "", 
+            "content_id": "Cut1", 
+            "errors": null, 
+            "id": 3, 
             "input_connections": {
                 "columnList": {
-                    "id": 0,
+                    "id": 0, 
                     "output_name": "output"
-                },
+                }, 
                 "input": {
-                    "id": 1,
+                    "id": 1, 
                     "output_name": "output"
                 }
-            },
-            "inputs": [],
-            "label": "cut",
-            "name": "Cut",
+            }, 
+            "inputs": [], 
+            "label": "cut", 
+            "name": "Cut", 
             "outputs": [
                 {
-                    "name": "out_file1",
+                    "name": "out_file1", 
                     "type": "tabular"
                 }
-            ],
+            ], 
             "position": {
-                "left": 292,
+                "left": 292, 
                 "top": 59
-            },
+            }, 
             "post_job_actions": {
                 "RenameDatasetActionout_file1": {
                     "action_arguments": {
                         "newname": "single_column.txt"
-                    },
-                    "action_type": "RenameDatasetAction",
+                    }, 
+                    "action_type": "RenameDatasetAction", 
                     "output_name": "out_file1"
                 }
-            },
-            "tool_id": "Cut1",
-            "tool_state": "{\"columnList\": {\"__class__\": \"ConnectedValue\"}, \"delimiter\": \"T\", \"input\": {\"__class__\": \"ConnectedValue\"}, \"__page__\": null, \"__rerun_remap_job_id__\": null}",
-            "tool_version": "1.0.2",
-            "type": "tool",
-            "uuid": "4bdeade6-a616-440d-a92c-914531c21337",
+            }, 
+            "tool_id": "Cut1", 
+            "tool_state": "{\"columnList\": \"{\\\"__class__\\\": \\\"ConnectedValue\\\"}\", \"input\": \"{\\\"__class__\\\": \\\"ConnectedValue\\\"}\", \"delimiter\": \"\\\"T\\\"\", \"__rerun_remap_job_id__\": null, \"__page__\": null}", 
+            "tool_version": "1.0.2", 
+            "type": "tool", 
+            "uuid": "4bdeade6-a616-440d-a92c-914531c21337", 
             "workflow_outputs": [
                 {
-                    "label": null,
-                    "output_name": "out_file1",
+                    "label": null, 
+                    "output_name": "out_file1", 
                     "uuid": "138513ab-8fe8-4cfa-9e6a-bb1d117bee1c"
                 }
             ]
-        },
+        }, 
         "4": {
-            "annotation": "",
-            "content_id": "mergeCols1",
-            "errors": null,
-            "id": 4,
+            "annotation": "", 
+            "content_id": "mergeCols1", 
+            "errors": null, 
+            "id": 4, 
             "input_connections": {
                 "input1": {
-                    "id": 2,
+                    "id": 2, 
                     "output_name": "output"
                 }
-            },
+            }, 
             "inputs": [
                 {
-                    "description": "runtime parameter for tool Merge Columns",
+                    "description": "runtime parameter for tool Merge Columns", 
                     "name": "input1"
                 }
-            ],
-            "label": "merge_cols",
-            "name": "Merge Columns",
+            ], 
+            "label": "merge_cols", 
+            "name": "Merge Columns", 
             "outputs": [
                 {
-                    "name": "out_file1",
+                    "name": "out_file1", 
                     "type": "tabular"
                 }
-            ],
+            ], 
             "position": {
-                "left": 284,
+                "left": 284, 
                 "top": 350
-            },
-            "post_job_actions": {},
-            "tool_id": "mergeCols1",
-            "tool_state": "{\"col1\": \"c1\", \"col2\": \"c2\", \"columns\": [], \"input1\": {\"__class__\": \"RuntimeValue\"}, \"__page__\": null, \"__rerun_remap_job_id__\": null}",
-            "tool_version": "1.0.1",
-            "type": "tool",
-            "uuid": "7737cf1a-0680-4a3d-9683-f0cc0478421e",
+            }, 
+            "post_job_actions": {}, 
+            "tool_id": "mergeCols1", 
+            "tool_state": "{\"__page__\": null, \"input1\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"col2\": \"\\\"c2\\\"\", \"col1\": \"\\\"c1\\\"\", \"columns\": \"[]\"}", 
+            "tool_version": "1.0.1", 
+            "type": "tool", 
+            "uuid": "7737cf1a-0680-4a3d-9683-f0cc0478421e", 
             "workflow_outputs": [
                 {
-                    "label": null,
-                    "output_name": "out_file1",
+                    "label": null, 
+                    "output_name": "out_file1", 
                     "uuid": "b426907c-1cd2-44f9-9fbc-59efbc5ce7bf"
                 }
             ]
-        },
+        }, 
         "5": {
-            "annotation": "",
-            "content_id": "Show beginning1",
-            "errors": null,
-            "id": 5,
+            "annotation": "", 
+            "content_id": "Show beginning1", 
+            "id": 5, 
             "input_connections": {
                 "input": {
-                    "id": 3,
+                    "id": 3, 
                     "output_name": "out_file1"
                 }
-            },
-            "inputs": [
-                {
-                    "description": "runtime parameter for tool Select first",
-                    "name": "input"
-                }
-            ],
-            "label": "select_lines",
-            "name": "Select first",
-            "outputs": [
-                {
-                    "name": "out_file1",
-                    "type": "input"
-                }
-            ],
+            }, 
+            "inputs": [], 
+            "label": "select_lines", 
+            "name": "Show beginning1", 
+            "outputs": [], 
             "position": {
-                "left": 510,
+                "left": 510, 
                 "top": 217.5
-            },
-            "post_job_actions": {},
-            "tool_id": "Show beginning1",
-            "tool_state": "{\"header\": \"false\", \"input\": {\"__class__\": \"RuntimeValue\"}, \"lineNum\": \"2\", \"__page__\": null, \"__rerun_remap_job_id__\": null}",
-            "tool_version": "1.0.1",
-            "type": "tool",
-            "uuid": "3c9bd01e-b4f9-432e-8715-d4d095a9c94c",
+            }, 
+            "post_job_actions": {}, 
+            "tool_id": "Show beginning1", 
+            "tool_state": "{\"__page__\": null, \"__rerun_remap_job_id__\": null, \"header\": \"false\", \"lineNum\": \"2\", \"input\": {\"__class__\": \"RuntimeValue\"}}", 
+            "tool_version": "1.0.0", 
+            "type": "tool", 
+            "uuid": "3c9bd01e-b4f9-432e-8715-d4d095a9c94c", 
             "workflow_outputs": [
                 {
-                    "label": null,
-                    "output_name": "out_file1",
+                    "label": null, 
+                    "output_name": "out_file1", 
                     "uuid": "7a0a0f5f-0e59-4728-88ed-ef794ee7a9e1"
                 }
             ]
         }
-    },
-    "tags": [],
-    "uuid": "c3c9d752-52b0-4ed3-9ff1-5e346e538d6d",
-    "version": 1
+    }, 
+    "tags": [], 
+    "uuid": "c3c9d752-52b0-4ed3-9ff1-5e346e538d6d", 
+    "version": 0
 }
