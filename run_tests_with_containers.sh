@@ -22,7 +22,7 @@ galaxy-wait -g http://localhost:8080/
 admin_id=$(parsec -g test -f test/parsec_creds.yaml users get_users | jq '.[] | select(.username=="admin") | .id' | sed s/\"//g)
 api_key_admin=$(parsec -g test -f test/parsec_creds.yaml users create_user_apikey $admin_id)
 
-# create a user with admin privs
+# create a user with admin privs, as the default admin user fails to uploads files to the data library
 user_id=$(parsec -g test -f test/parsec_creds.yaml users create_local_user helper_user $helper_user_email 'helper.pass_56%' | jq '.id' | sed s/\"//g)
 user_api_key=$(parsec -g test -f test/parsec_creds.yaml users create_user_apikey $user_id)
 
