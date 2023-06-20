@@ -148,6 +148,7 @@ def main():
                 history = gi.histories.create_history(name=args.history)
                 state.input_history = history
                 state.save_state()
+                logging.info('History id {}'.format(history['id']))
         else:
             logging.info('Using history available in state file')
             history = state.input_history
@@ -165,7 +166,7 @@ def main():
 
         # upload dataset to history
         if state.datamap is None:
-            logging.info('Uploading dataset to history ...')
+            logging.info('Uploading dataset to history {}'.format(history['id']))
             if num_inputs > 0:
                 datamap = load_input_files(gi, inputs=inputs_data,
                                            workflow=show_wf, history=history)
@@ -190,6 +191,8 @@ def main():
                                                        history_name=(args.history + '_results'))
                 state.results = results
                 state.save_state()
+                logging.info('workflow id {}'.format(results['workflow_id']))
+                logging.info('invocation id {}'.format(results['id']))
             except Exception as ce:
                 logging.error("Failure when invoking invoke workflows: {}".format(str(ce)))
                 raise ce
