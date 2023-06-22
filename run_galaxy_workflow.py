@@ -185,11 +185,14 @@ def main():
         if state.results is None:
             try:
                 logging.info('Running workflow {}...'.format(show_wf['name']))
+                logging.info('workflow id {}...'.format(workflow_id))
                 results = gi.workflows.invoke_workflow(workflow_id=workflow_id,
                                                        inputs=datamap,
                                                        params=params,
                                                        history_name=(args.history + '_results'))
+                logging.info('workflow invoked...')
                 state.results = results
+                logging.info(results)
                 state.save_state()
                 logging.info('workflow id {}'.format(results['workflow_id']))
                 logging.info('invocation id {}'.format(results['id']))
