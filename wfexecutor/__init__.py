@@ -106,7 +106,9 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 
                 folder_id = folder[0]['id']
                 
-                uploaded_dataset = gi.libraries.upload_from_galaxy_filesystem(lib_id, file_path, folder_id=folder_id, link_data_only="link_to_files", tag_using_filenames=True)
+                uploaded_dataset = gi.libraries.upload_from_galaxy_filesystem(lib_id, file_path, folder_id=folder_id, link_data_only="copy_files", tag_using_filenames=True)
+
+                gi.libraries.wait_for_dataset(library_id=lib_id, dataset_id=uploaded_dataset[0]['id']) 
                 
                 updated_dataset = gi.libraries.update_library_dataset(dataset_id=uploaded_dataset[0]['id'], name=dataset['name'])
                 
