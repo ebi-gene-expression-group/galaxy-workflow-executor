@@ -40,7 +40,6 @@ def get_args():
                             required=True,
                             help='Path to Yaml detailing inputs')
     arg_parser.add_argument('-o', '--output-dir',
-                            # default=os.getcwd(),
                             help='Path to output directory')
     arg_parser.add_argument('-H', '--history',
                             default='',
