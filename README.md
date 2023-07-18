@@ -82,10 +82,12 @@ barcodes:
   type: tsv
 gtf:
   dataset_id: fe139k21xsak
+gtf_2:
+  library_id: 72d451d0c6fac862
 ```
 
 where in this example case the Galaxy workflow should have input labels called `matrix`,
-`genes`, `barcodes` and `gtf`. The paths need to exist in the local file system, if `path` is set within an input. Alternatively to a path in the local file system, if the file is already on the Galaxy instance, the `dataset_id` of the file can be given instead, as shown for the `gtf` case here.
+`genes`, `barcodes` and `gtf`. The paths need to exist in the local file system, if `path` is set within an input. Alternatively to a path in the local file system, if the file is already on the Galaxy instance, the `dataset_id` or `library_id` of the file can be given instead, as shown for the `gtf` or `gtf_2` cases here.
 
 # Steps with allowed errors
 

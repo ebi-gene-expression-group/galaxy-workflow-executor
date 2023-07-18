@@ -1,0 +1,5 @@
+text_input:
+  path: test/file_with_2_cols.txt
+  type: tabular
+text_input_to_merge:
+  library_id: <INPUT_TO_MERGE_LIBRARY_ID>

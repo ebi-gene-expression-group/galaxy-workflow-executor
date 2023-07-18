@@ -1,0 +1,7 @@
+venv-test
+test/wf_inputs.yaml
+test/creds.yaml
+test_out
+exec_state.pickle
+build
+galaxy_workflow_executor.egg-info
