@@ -78,6 +78,11 @@ def get_args():
                             action='store_true',
                             default=False,
                             help="Keeps workflow created, it will be purged if not.")
+    arg_parser.add_argument('-l', '--library-name',
+                            required=False,
+                            default=None,
+                            help="Upload results to data library with the name specified."
+                            )
     arg_parser.add_argument('--publish', action='store_true',
                             default=False, help="Keep result history and make it public/accesible.")
     arg_parser.add_argument('--accessible', action='store_true',
@@ -246,14 +251,25 @@ def main():
             results_hid = gi.histories.show_history(results['history_id'])
             state = results_hid['state']
 
+        # Upload results to Library
+        if args.library_name:
+            logging.info('Uploading results to Library')
+            lib_id = gi.libraries.get_libraries(name=args.library_name)[0]['id']
+            if lib_id:
+                export_results_to_data_library(gi=gi, history_id=results['history_id'], lib_id=lib_id, allowed_error_states=allowed_error_states)
+            else:
+                logging.error('Library {} not found, results not uploaded to library'.args.library_name)
+
+
         # Download results
-        logging.info('Downloading results ...')
-        download_results(gi, history_id=results['history_id'],
-                         output_dir=args.output_dir, allowed_error_states=allowed_error_states,
-                         use_names=True)
-        logging.info('Results available.')
-        logging.info('Deleting state file {}'.format(args.state_file))
-        os.unlink(args.state_file)
+        if args.output_dir:
+            logging.info('Downloading results ...')
+            download_results(gi, history_id=results['history_id'],
+                output_dir=args.output_dir, allowed_error_states=allowed_error_states,
+                use_names=True)
+            logging.info('Results available.')
+            logging.info('Deleting state file {}'.format(args.state_file))
+            os.unlink(args.state_file)
 
         if args.publish:
             gi.histories.update_history(results['history_id'], published=True)
