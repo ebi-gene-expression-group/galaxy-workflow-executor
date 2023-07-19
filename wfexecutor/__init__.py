@@ -160,18 +160,31 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 gi.libraries.update_library_dataset(dataset_id=uploaded_dataset[0]['id'], name=dataset['name'])
 
 #             Adding support for data collection 
-#             elif dataset['type'] == 'collection':
-#             for ds_in_coll in dataset['elements']:
-#                 if ds_in_coll['object']['state'] == 'error' and ds_in_coll['object']['id'] in allowed_error_states['datasets']:
-#                     logging.info('Skipping upload of failed {} as it is an allowed failure.'
-#                                  .format(ds_in_coll['object']['name']))
-#                     continue
-#                 if ds_in_coll['object']['name'] is not None:
-#                     # TODO it fails here to download if it is in 'error' state
-#                     gi.datasets.download_dataset(ds_in_coll['object']['id'],
-#                                                  file_path=os.path.join(output_dir, ds_in_coll['object']['name']),
-#                                                  use_default_filename=False)
-#                     used_names.add(ds_in_coll['object']['name'])
+            elif dataset['type'] == 'collection':
+                folder_name = gi.dataset_collections.show_dataset_collection(dataset['id'], 'history')['name']
+                history_name = gi.histories.show_history(history_id)['name']
+                folder = gi.libraries.get_folders(library_id=lib_id, name='/'+history_name+'/'+folder_name)
+
+                if folder == []:
+                    folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=folder_name)
+
+                folder_id = folder[0]['id']
+                for ds_in_coll in dataset['elements']:
+                    if ds_in_coll['object']['state'] == 'error' and ds_in_coll['object']['id'] in allowed_error_states['datasets']:
+                        logging.info('Skipping upload of failed {} as it is an allowed failure.'
+                                 .format(ds_in_coll['object']['name']))
+                        continue
+                    if ds_in_coll['object']['name'] is not None:
+                        # Get dataset object for the collection element
+                        dataset = gi.datasets.show_dataset(ds_in_coll['id'])
+                        file_path = dataset['file_name']               
+                        
+                        uploaded_dataset = gi.libraries.upload_from_galaxy_filesystem(lib_id, file_path, folder_id=folder_id, link_data_only="copy_files", tag_using_filenames=True)
+                        gi.libraries.wait_for_dataset(library_id=lib_id, dataset_id=uploaded_dataset[0]['id']) 
+                        updated_dataset = gi.libraries.update_library_dataset(dataset_id=uploaded_dataset[0]['id'], name=dataset['name'])
+
+                        logging.info('data uploaded updating name to {}.'
+                             .format(dataset['name']))
 
 
 def set_params(json_wf, param_data):
