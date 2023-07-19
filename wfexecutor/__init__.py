@@ -160,7 +160,7 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 gi.libraries.update_library_dataset(dataset_id=uploaded_dataset[0]['id'], name=dataset['name'])
 
 #             Adding support for data collection 
-         elif dataset['type'] == 'collection':
+        elif dataset['type'] == 'collection':
             logging.info('collection block starts')
             
             folder_name = gi.dataset_collections.show_dataset_collection(dataset['id'], 'history')['name']
