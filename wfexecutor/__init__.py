@@ -186,7 +186,7 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
             if folder == []:
                 logging.info('if foolder block..')
                 
-                folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=folder_name, base_folder_id=base_folder[0]['id])
+                folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=folder_name, base_folder_id=base_folder[0]['id'])
 
             folder_id = folder[0]['id']
             logging.info('data uploaded updating name to {}.'
