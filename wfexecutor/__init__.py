@@ -179,8 +179,6 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
             logging.info('folder_name to {}.'
                          .format(folder_name))
             
-            logging.info('history_name {}.'
-                         .format(history_name))
             
             folder = gi.libraries.get_folders(library_id=lib_id, name='/'+base_folder_name+'/'+folder_name)
 
