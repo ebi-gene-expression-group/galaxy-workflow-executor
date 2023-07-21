@@ -159,55 +159,33 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 
                 gi.libraries.update_library_dataset(dataset_id=uploaded_dataset[0]['id'], name=dataset['name'])
 
-#             Adding support for data collection 
         elif dataset['type'] == 'collection':
-            logging.info('collection block starts')
             
-            base_folder_name = gi.histories.show_history(history_id)['name']
-
             base_folder_name = gi.histories.show_history(history_id)['name']
             base_folder = gi.libraries.get_folders(library_id=lib_id, name='/'+base_folder_name)
 
-            logging.info('folder_name to {}.'
-             .format(base_folder_name))
-            
             if base_folder == []:
                 base_folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=base_folder_name)
 
             folder_name = gi.dataset_collections.show_dataset_collection(dataset['id'], 'history')['name']
-
-            logging.info('folder_name to {}.'
-                         .format(folder_name))
-            
-            
             folder = gi.libraries.get_folders(library_id=lib_id, name='/'+base_folder_name+'/'+folder_name)
 
             if folder == []:
-                logging.info('if foolder block..')
-                
                 folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=folder_name, base_folder_id=base_folder[0]['id'])
 
             folder_id = folder[0]['id']
-            logging.info('data uploaded updating name to {}.'
-                         .format(dataset['name']))
             
             for ds_in_coll in dataset['elements']:
-                logging.info('for loop')
                 
                 if ds_in_coll['object']['state'] == 'error' and ds_in_coll['object']['id'] in allowed_error_states['datasets']:
                     logging.info('Skipping upload of failed {} as it is an allowed failure.'
                              .format(ds_in_coll['object']['name']))
                     continue
                 if ds_in_coll['object']['name'] is not None:
-                    logging.info('if ds block {}.'
-                         .format(ds_in_coll['object']['name']))
                     
                     # Get dataset object for the collection element
                     dataset = gi.datasets.show_dataset(ds_in_coll['id'])
                     file_path = dataset['file_name']
-
-                    logging.info('file_path {}.'
-                         .format(file_path))
                     
                     uploaded_dataset = gi.libraries.upload_from_galaxy_filesystem(lib_id, file_path, folder_id=folder_id, link_data_only="copy_files", tag_using_filenames=True)
                     gi.libraries.wait_for_dataset(library_id=lib_id, dataset_id=uploaded_dataset[0]['id']) 
