@@ -81,7 +81,7 @@ def get_args():
     arg_parser.add_argument('-l', '--library-name',
                             required=False,
                             default=None,
-                            help="Upload results to data library with the name specified."
+                            help="Upload results to data library with the name specified. Results will not be downoaded locally."
                             )
     arg_parser.add_argument('--publish', action='store_true',
                             default=False, help="Keep result history and make it public/accesible.")
