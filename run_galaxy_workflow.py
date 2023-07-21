@@ -87,8 +87,6 @@ def get_args():
                             default=False, help="Keep result history and make it public/accesible.")
     arg_parser.add_argument('--accessible', action='store_true',
                             default=False, help="Keep result history and make it accessible via link only.")
-    arg_parser.add_argument('--do-not-download-results', action='store_true',
-                            default=False, help="Will skip downloading results.")
     args = arg_parser.parse_args()
     return args
 
@@ -262,9 +260,9 @@ def main():
             else:
                 logging.error('Library {} not found, results not uploaded to library'.args.library_name)
 
+        else:
+        # If library name not specied then Download results
 
-        # Download results
-        if args.do_not_download_results == False:
             logging.info('Downloading results ...')
             download_results(gi, history_id=results['history_id'],
                 output_dir=args.output_dir, allowed_error_states=allowed_error_states,
