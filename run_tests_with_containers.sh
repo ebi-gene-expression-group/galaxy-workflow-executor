@@ -47,3 +47,9 @@ run_galaxy_workflow.py -C test/creds.yaml \
     -G test -o test_out/ -H 'test history' -W test/wf.json \
     -i test/wf_inputs.yaml -P test/wf_parameters.yaml \
     --parameters-yaml
+
+# Runs a test with data upload to datalib 
+run_galaxy_workflow.py -C test/creds.yaml \
+    -G test -l test -H 'lib test history' -W test/wf.json \
+    -i test/wf_inputs.yaml -P test/wf_parameters.yaml \
+    --parameters-yaml
