@@ -163,22 +163,30 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
         elif dataset['type'] == 'collection':
             logging.info('collection block starts')
             
+            base_folder_name = gi.histories.show_history(history_id)['name']
+
+            base_folder_name = gi.histories.show_history(history_id)['name']
+            base_folder = gi.libraries.get_folders(library_id=lib_id, name='/'+base_folder_name)
+
+            if base_folder == []:
+                base_folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=folder_name)
+
             folder_name = gi.dataset_collections.show_dataset_collection(dataset['id'], 'history')['name']
 
             logging.info('folder_name to {}.'
                          .format(folder_name))
 
             
-            history_name = gi.histories.show_history(history_id)['name']
+            
             logging.info('history_name {}.'
                          .format(history_name))
             
-            folder = gi.libraries.get_folders(library_id=lib_id, name='/'+history_name+'/'+folder_name)
+            folder = gi.libraries.get_folders(library_id=lib_id, name='/'+base_folder_name+'/'+folder_name)
 
             if folder == []:
                 logging.info('if foolder block..')
                 
-                folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=folder_name)
+                folder = gi.libraries.gi.libraries.create_folder(library_id=lib_id, folder_name=folder_name, base_folder_id=base_folder[0]['id])
 
             folder_id = folder[0]['id']
             logging.info('data uploaded updating name to {}.'
