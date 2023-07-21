@@ -184,7 +184,7 @@ def export_results_to_data_library(gi, history_id, lib_id, allowed_error_states)
                 if ds_in_coll['object']['name'] is not None:
                     
                     # Get dataset object for the collection element
-                    dataset = gi.datasets.show_dataset(ds_in_coll['id'])
+                    dataset = gi.datasets.show_dataset(ds_in_coll['object']['id'])
                     file_path = dataset['file_name']
                     
                     uploaded_dataset = gi.libraries.upload_from_galaxy_filesystem(lib_id, file_path, folder_id=folder_id, link_data_only="copy_files", tag_using_filenames=True)
