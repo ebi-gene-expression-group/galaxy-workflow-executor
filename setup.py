@@ -14,7 +14,7 @@ setup(
         description='Execute workflows on Galaxy through the CLI',
         long_description=readme(),
         packages=find_packages(),
-        install_requires=['bioblend==0.13.0'],
+        install_requires=['bioblend==1.2.0'],
         author='Suhaib Mohammed, Pablo Moreno',
         long_description_content_type='text/markdown',
         author_email='',
