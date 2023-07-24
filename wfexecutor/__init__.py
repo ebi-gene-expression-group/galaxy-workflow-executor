@@ -274,9 +274,8 @@ def load_input_files(gi, inputs, workflow, history):
             # We are in the presence of a simple parameter input
             inputs_for_invoke[step] = inputs[step_data['label']]
         elif step_data['label'] in inputs and 'library_id' in inputs[step_data['label']]:
-            upload_res = gi.histories.copy_dataset(history_id=history['id'],
-                                              dataset_id=inputs[step_data['label']]['library_id'],
-                                              source="library")
+            upload_res = gi.histories.upload_dataset_from_library(history_id=history['id'], 
+                                                                  lib_dataset_id=inputs[step_data['label']]['library_id'])
             inputs_for_invoke[step] = {
                  'id': upload_res['id'],
                  'src': 'hda'
