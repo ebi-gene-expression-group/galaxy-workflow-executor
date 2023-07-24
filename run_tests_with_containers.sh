@@ -12,7 +12,7 @@ docker run -d -p 8080:80 -p 8021:21 -p 8022:22 \
     -e "GALAXY_CONFIG_ADMIN_USERS=$helper_user_email,admin@galaxy.org" \
     -e "NONUSE=nodejs,proftp,reports" \
     -e "GALAXY_CONFIG_ALLOW_PATH_PASTE=true" \
-    bgruening/galaxy-stable:20.09
+    bgruening/galaxy-stable:19.09
 rm -rf venv-test
 # virtualenv venv-test
 python3 -m venv venv-test
