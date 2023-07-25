@@ -15,7 +15,7 @@ setup(
         long_description=readme(),
         packages=find_packages(),
         install_requires=['bioblend==0.13.0'],
-        author='Suhaib Mohammed, Pablo Moreno',
+        author='Suhaib Mohammed, Pablo Moreno, Anil Thanki',
         long_description_content_type='text/markdown',
         author_email='',
         scripts=['run_galaxy_workflow.py', 'generate_params_from_workflow.py'],
