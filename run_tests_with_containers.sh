@@ -11,6 +11,7 @@ docker run -d -p 8080:80 -p 8021:21 -p 8022:22 \
     -e "GALAXY_CONFIG_MASTER_API_KEY=$api_key" \
     -e "GALAXY_CONFIG_ADMIN_USERS=$helper_user_email,admin@galaxy.org" \
     -e "NONUSE=nodejs,proftp,reports" \
+    -e "GALAXY_CONFIG_ALLOW_PATH_PASTE=true" \
     bgruening/galaxy-stable:19.09
 rm -rf venv-test
 # virtualenv venv-test
@@ -45,5 +46,11 @@ sed "s/<INPUT_TO_MERGE_LIBRARY_ID>/$file_library_id/" test/wf_inputs.yaml.templa
 mkdir -p test_out
 run_galaxy_workflow.py -C test/creds.yaml \
     -G test -o test_out/ -H 'test history' -W test/wf.json \
+    -i test/wf_inputs.yaml -P test/wf_parameters.yaml \
+    --parameters-yaml
+
+# Runs a test with data upload to datalib 
+run_galaxy_workflow.py -C test/creds.yaml \
+    -G test -l test -H 'lib test history' -W test/wf.json \
     -i test/wf_inputs.yaml -P test/wf_parameters.yaml \
     --parameters-yaml
