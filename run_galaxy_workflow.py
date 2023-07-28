@@ -289,7 +289,7 @@ def main():
             logging.info('Deleting histories...')
             try:
                 if not args.publish and not args.accessible:
-                    logging.info("Not deleting results history as marked as shared or published...")
+                    logging.info("Deleting results history as not marked as shared or published...")
                     gi.histories.delete_history(results['history_id'], purge=True)
                 if num_inputs > 0:
                     gi.histories.delete_history(history['id'], purge=True)
