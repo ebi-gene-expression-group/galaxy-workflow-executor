@@ -15,8 +15,12 @@ def get_instance(conf, name='__default'):
     assert name in data, 'unknown instance'
     entry = data[name]
     if isinstance(entry, dict):
+        if entry['key'] in os.environ:
+            entry['key'] = os.environ[entry['key']]
         return entry
     else:
+        if data[entry]['key'] in os.environ:
+            data[entry]['key'] = os.environ[data[entry]['key']]
         return data[entry]
 
 
