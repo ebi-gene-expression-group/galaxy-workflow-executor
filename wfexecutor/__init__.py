@@ -16,10 +16,14 @@ def get_instance(conf, name='__default'):
     entry = data[name]
     if isinstance(entry, dict):
         if entry['key'] in os.environ:
+            logging.info('API env here {}'
+                             .format(entry['key']))
             entry['key'] = os.environ[entry['key']]
         return entry
     else:
         if data[entry]['key'] in os.environ:
+            logging.info('API env here {}'
+                             .format(data[entry]['key']))
             data[entry]['key'] = os.environ[data[entry]['key']]
         return data[entry]
 
