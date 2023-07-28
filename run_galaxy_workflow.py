@@ -136,6 +136,7 @@ def main():
         # Prepare environment and do any post connection validations.
         logging.info('Prepare galaxy environment...')
         ins = get_instance(args.conf, name=args.galaxy_instance)
+        logging.info('gi cred {}...'.format(ins['key']))
         gi = GalaxyInstance(ins['url'], key=ins['key'])
         validate_dataset_id_exists(gi, inputs_data)
 
