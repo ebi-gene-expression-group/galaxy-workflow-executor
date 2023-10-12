@@ -111,7 +111,9 @@ The above example means that the step with label `step_label_x` can fail with an
 # Results
 
 All workflow outputs that were marked in the workflow to be shown will either be downloaded (if `-l` or `--library-name` is not specified) to the specified results directory,
-or results will be uploaded to the specified library, in both cases hidden results will be ignored and unless specified, histories (with its contents) and workflows will be deleted from the instance.
+or results will be uploaded to the specified library<sup>1</sup>, in both cases hidden results will be ignored and unless specified, histories (with its contents) and workflows will be deleted from the instance.
+
+<sup>1</sup> Galaxy user must have admin privilege to be able to upload results to library. 
 
 # Toy example
 
