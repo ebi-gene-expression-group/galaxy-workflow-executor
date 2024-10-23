@@ -18,7 +18,7 @@ rm -rf venv-test
 python3 -m venv venv-test
 source venv-test/bin/activate
 pip install wheel
-pip install . ephemeris galaxy-parsec
+pip install . 'ephemeris==0.10.8' 'galaxy-parsec==1.13.0'
 galaxy-wait -g http://localhost:8080/
 echo "Galaxy is up and running"
 parsec -g test -f test/parsec_creds.yaml users get_users
