@@ -20,6 +20,7 @@ source venv-test/bin/activate
 pip install wheel
 pip install . ephemeris galaxy-parsec
 galaxy-wait -g http://localhost:8080/
+echo "Galaxy is up and running"
 admin_id=$(parsec -g test -f test/parsec_creds.yaml users get_users | jq '.[] | select(.username=="admin") | .id' | sed s/\"//g)
 api_key_admin=$(parsec -g test -f test/parsec_creds.yaml users create_user_apikey $admin_id)
 
