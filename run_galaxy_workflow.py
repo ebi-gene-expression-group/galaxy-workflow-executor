@@ -292,7 +292,7 @@ def main():
             results_hid = gi.histories.show_history(results['history_id'])
             state = results_hid['state']
 
-        download = not args.no_download
+        download = not args.no_downloads
 
         # Upload results to Library
         if args.library_name:
