@@ -18,8 +18,10 @@ rm -rf venv-test
 python3 -m venv venv-test
 source venv-test/bin/activate
 pip install wheel
-pip install . ephemeris galaxy-parsec
+pip install ephemeris galaxy-parsec
 galaxy-wait -g http://localhost:8080/
+echo "Galaxy is up and running"
+parsec -g test -f test/parsec_creds.yaml users get_users
 admin_id=$(parsec -g test -f test/parsec_creds.yaml users get_users | jq '.[] | select(.username=="admin") | .id' | sed s/\"//g)
 api_key_admin=$(parsec -g test -f test/parsec_creds.yaml users create_user_apikey $admin_id)
 
@@ -42,6 +44,12 @@ file_library_id=$(parsec -g test -f test/creds.yaml libraries upload_file_from_l
 echo "File library ID: $file_library_id"
 
 sed "s/<INPUT_TO_MERGE_LIBRARY_ID>/$file_library_id/" test/wf_inputs.yaml.template > test/wf_inputs.yaml
+
+deactivate
+python3 -m venv venv-wfe
+source venv-wfe/bin/activate
+pip install wheel
+pip install .
 
 mkdir -p test_out
 run_galaxy_workflow.py -C test/creds.yaml \

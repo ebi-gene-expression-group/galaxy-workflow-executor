@@ -1,9 +1,9 @@
 [![PyPI version fury.io](https://badge.fury.io/py/galaxy-workflow-executor.svg)](https://pypi.python.org/pypi/galaxy-workflow-executor/)
 [![Build Status](https://api.travis-ci.com/ebi-gene-expression-group/galaxy-workflow-executor.svg?branch=develop)](https://travis-ci.org/ebi-gene-expression-group/galaxy-workflow-executor)
 
-# Galaxy workflow executor 0.2.6
+# Galaxy workflow executor 0.3.0
 
-This setup uses bioblend (0.12 - 0.13 tested) to run a Galaxy workflow through the CLI:
+This setup uses bioblend (1.13.0 tested) to run a Galaxy workflow through the CLI:
 
 - Inputs:
   - Galaxy workflow with steps annotated with labels as JSON file (MUST be obtained in Galaxy UI from Share Workflow -> Download).
@@ -110,8 +110,7 @@ The above example means that the step with label `step_label_x` can fail with an
 
 # Results
 
-All workflow outputs that were marked in the workflow to be shown will either be downloaded (if `-l` or `--library-name` is not specified) to the specified results directory,
-or results will be uploaded to the specified library<sup>1</sup>, in both cases hidden results will be ignored and unless specified, histories (with its contents) and workflows will be deleted from the instance.
+All workflow outputs that were marked in the workflow to be shown will either be downloaded (unless that `--no-downloads` is issued) to the specified results directory, kept at the history where they are produced (if `--keep-histories` issued) or stored in a specified library (if `-l` or `--library-name` is specified). In all cases, hidden results in the workflow will be ignored and unless specified, histories (with its contents) and workflows will be deleted from the instance. Note that failure to use a reasonable combination of this options could lead you to lose results (no downloads, no library, not keeping the histories).
 
 <sup>1</sup> Galaxy user must have admin privilege to be able to upload results to library. 
 
