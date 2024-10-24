@@ -17,6 +17,8 @@ File inputs.yaml must contain paths to all input labels in the workflow.
 
 import argparse
 import logging
+import os
+import time
 from collections.abc import Mapping
 from sys import exit
 
@@ -102,6 +104,11 @@ def get_args():
                             default=None,
                             help=("Upload results to data library with the name specified. "
                                   "Results will not be downloaded locally.")
+                            )
+    arg_parser.add_argument('--no-downloads', action='store_true',
+                            default=False,
+                            help="Do not download the results. Make sure to specify a "
+                                 "library name or to keep the created histories."
                             )
     arg_parser.add_argument('--publish', action='store_true',
                             default=False, 
@@ -285,6 +292,8 @@ def main():
             results_hid = gi.histories.show_history(results['history_id'])
             state = results_hid['state']
 
+        download = not args.no_download
+
         # Upload results to Library
         if args.library_name:
             logging.info('Uploading results to Library')
@@ -301,16 +310,19 @@ def main():
             else:
                 logging.error(f'Library {args.library_name} not found, results not uploaded to library')
 
-        else:
-        # If library name not specied then Download results
-
+        elif download:
             logging.info('Downloading results ...')
             download_results(gi, history_id=results['history_id'],
                 output_dir=args.output_dir, allowed_error_states=allowed_error_states,
                 use_names=True)
             logging.info('Results available.')
-            logging.info('Deleting state file {}'.format(args.state_file))
-            os.unlink(args.state_file)
+        elif not args.keep_histories:
+            logging.info("Downloads turned off, no library specified and deleting the histories... you won't keep results.")
+        else:
+            logging.info('Results kept in history.')
+
+        logging.info('Deleting state file {}'.format(args.state_file))
+        os.unlink(args.state_file)
 
         if args.publish:
             gi.histories.update_history(results['history_id'], published=True)
