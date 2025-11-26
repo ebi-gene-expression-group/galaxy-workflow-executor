@@ -16,16 +16,37 @@ File inputs.yaml must contain paths to all input labels in the workflow.
 """
 
 import argparse
-from os import path, remove
+import logging
+import os
+import time
+from collections.abc import Mapping
 from sys import exit
-from bioblend.galaxy import GalaxyInstance
-from bioblend import ConnectionError
 
-from wfexecutor import *
+from bioblend import ConnectionError
+from bioblend.galaxy import GalaxyInstance
+
+from wfexecutor import (
+    ExecutionState,
+    completion_state,
+    download_results,
+    export_results_to_data_library,
+    get_instance,
+    get_workflow_from_file,
+    get_workflow_id,
+    load_input_files,
+    process_allowed_errors,
+    produce_versions_file,
+    read_json_file,
+    read_yaml_file,
+    set_params,
+    validate_dataset_id_exists,
+    validate_file_exists,
+    validate_input_labels,
+    validate_labels,
+)
+
 # Exit status:
 # 3 - history deletion problem
-#from wfexecutor import download_results, set_params, load_input_files, validate_labels, validate_input_labels, \
-#    validate_file_exists, validate_dataset_id_exists, completion_state, process_allowed_errors, produce_versions_file
 
 
 def get_args():
@@ -78,10 +99,24 @@ def get_args():
                             action='store_true',
                             default=False,
                             help="Keeps workflow created, it will be purged if not.")
+    arg_parser.add_argument('-l', '--library-name',
+                            required=False,
+                            default=None,
+                            help=("Upload results to data library with the name specified. "
+                                  "Results will not be downloaded locally.")
+                            )
+    arg_parser.add_argument('--no-downloads', action='store_true',
+                            default=False,
+                            help="Do not download the results. Make sure to specify a "
+                                 "library name or to keep the created histories."
+                            )
     arg_parser.add_argument('--publish', action='store_true',
-                            default=False, help="Keep result history and make it public/accesible.")
+                            default=False, 
+                            help="Keep result history and make it public/accesible.")
     arg_parser.add_argument('--accessible', action='store_true',
-                            default=False, help="Keep result history and make it accessible via link only.")
+                            default=False, 
+                            help="Keep result history and make it accessible "
+                            "via link only.")
     args = arg_parser.parse_args()
     return args
 
@@ -101,14 +136,19 @@ def main():
         # Load workflows, inputs and parameters
         wf_from_json = read_json_file(args.workflow)
         if args.parameters:
-            param_data = read_yaml_file(args.parameters) if args.parameters_yaml else read_json_file(args.parameters)
+            param_data = (
+                read_yaml_file(args.parameters)
+                if args.parameters_yaml
+                else read_json_file(args.parameters)
+            )
         else:
             param_data = dict()
         inputs_data = read_yaml_file(args.yaml_inputs_path)
         allowed_error_states = {'tools': {}, 'datasets': set()}
         if args.allowed_errors is not None:
             allowed_error_states = \
-                process_allowed_errors(read_yaml_file(args.allowed_errors), wf_from_json)
+                process_allowed_errors(read_yaml_file(args.allowed_errors),
+                                       wf_from_json)
 
         # Move any simple parameters from parameters to inputs
         params_to_move = []
@@ -179,14 +219,18 @@ def main():
         if state.results is None:
             try:
                 logging.info('Running workflow {}...'.format(show_wf['name']))
-                results = gi.workflows.invoke_workflow(workflow_id=workflow_id,
-                                                       inputs=datamap,
-                                                       params=params,
-                                                       history_name=(args.history + '_results'))
+                results = gi.workflows.invoke_workflow(
+                    workflow_id=workflow_id,
+                    inputs=datamap,
+                    params=params,
+                    history_name=(args.history + '_results')
+                )
                 state.results = results
                 state.save_state()
             except Exception as ce:
-                logging.error("Failure when invoking invoke workflows: {}".format(str(ce)))
+                logging.error(
+                    "Failure when invoking invoke workflows: {}".format(str(ce))
+                )
                 raise ce
         else:
             logging.info("Invocation result present in state, resuming that invocation")
@@ -194,7 +238,9 @@ def main():
 
         # Produce tool versions file
         produce_versions_file(gi=gi, workflow_from_json=wf_from_json,
-                              table_path="{}/software_versions_galaxy.txt".format(args.output_dir))
+                              table_path=(
+                                  "{}/software_versions_galaxy.txt".format(args.output_dir)
+                              ))
         
         # wait for a little while and check if the status is ok
         logging.info("Waiting for results to be available...")
@@ -246,12 +292,35 @@ def main():
             results_hid = gi.histories.show_history(results['history_id'])
             state = results_hid['state']
 
-        # Download results
-        logging.info('Downloading results ...')
-        download_results(gi, history_id=results['history_id'],
-                         output_dir=args.output_dir, allowed_error_states=allowed_error_states,
-                         use_names=True)
-        logging.info('Results available.')
+        download = not args.no_downloads
+
+        # Upload results to Library
+        if args.library_name:
+            logging.info('Uploading results to Library')
+            lib = gi.libraries.get_libraries(name=args.library_name)
+
+            if lib == []:
+                lib = gi.libraries.create_library(name=args.library_name, description="Generated from galaxy-workflow-executor")
+                lib_id = lib['id']
+            else:
+                lib_id = lib[0]['id']
+                   
+            if lib_id:
+                export_results_to_data_library(gi=gi, history_id=results['history_id'], lib_id=lib_id, allowed_error_states=allowed_error_states)
+            else:
+                logging.error(f'Library {args.library_name} not found, results not uploaded to library')
+
+        elif download:
+            logging.info('Downloading results ...')
+            download_results(gi, history_id=results['history_id'],
+                output_dir=args.output_dir, allowed_error_states=allowed_error_states,
+                use_names=True)
+            logging.info('Results available.')
+        elif not args.keep_histories:
+            logging.info("Downloads turned off, no library specified and deleting the histories... you won't keep results.")
+        else:
+            logging.info('Results kept in history.')
+
         logging.info('Deleting state file {}'.format(args.state_file))
         os.unlink(args.state_file)
 
@@ -266,7 +335,7 @@ def main():
             logging.info('Deleting histories...')
             try:
                 if not args.publish and not args.accessible:
-                    logging.info("Not deleting results history as marked as shared or published...")
+                    logging.info("Deleting results history as not marked as shared or published...")
                     gi.histories.delete_history(results['history_id'], purge=True)
                 if num_inputs > 0:
                     gi.histories.delete_history(history['id'], purge=True)
@@ -301,4 +370,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

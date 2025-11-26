@@ -1,3 +1,0 @@
-text_input:
-  path: test/file_with_2_cols.txt
-  type: tabular
