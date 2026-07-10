@@ -7,7 +7,6 @@ import os.path
 from collections.abc import Mapping
 import yaml
 import json
-import pickle
 
 
 def get_instance(conf, name='__default'):
@@ -533,21 +532,36 @@ class ExecutionState(object):
     def __init__(self, path):
         self.path = path
 
+    @classmethod
+    def from_dict(cls, path, data):
+        es = cls(path)
+        for key in ('wf_from_file', 'datamap', 'params', 'results', 'input_history'):
+            setattr(es, key, data.get(key))
+        return es
+
+    def to_dict(self):
+        return {
+            'wf_from_file': self.wf_from_file,
+            'datamap': self.datamap,
+            'params': self.params,
+            'results': self.results,
+            'input_history': self.input_history,
+        }
+
     @staticmethod
     def start(path):
         if os.path.isfile(path):
             try:
-                with open(path, mode='rb') as d:
-                    es = pickle.load(d)
-                    if type(es) is ExecutionState:
-                        return es
-                    else:
-                        logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
-            except Exception:
+                with open(path) as d:
+                    data = json.load(d)
+                if isinstance(data, dict):
+                    return ExecutionState.from_dict(path, data)
+                logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
+            except (OSError, json.JSONDecodeError, TypeError):
                 logging.warning("Could not read serialized file {}.".format(path))
         return ExecutionState(path)
 
     def save_state(self):
-        with open(self.path, mode='wb') as d:
-            pickle.dump(self, d)
+        with open(self.path, mode='w') as d:
+            json.dump(self.to_dict(), d)
             
