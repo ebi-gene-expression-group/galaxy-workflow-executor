@@ -1,5 +1,7 @@
 import os
 import json
+import logging
+import pickle
 
 from wfexecutor import ExecutionState, safe_download_path
 
@@ -32,6 +34,21 @@ def test_save_state_writes_json(tmp_path):
     assert data['datamap'] == {'key': 'value'}
     assert data['params'] == {'step': {'parameter': 'setting'}}
     assert data['results'] is None
+
+
+def test_start_reads_legacy_pickle_state_with_deprecation_warning(tmp_path, caplog):
+    state_path = tmp_path / "exec_state.pickle"
+    legacy_state = ExecutionState(str(state_path))
+    legacy_state.datamap = {'legacy': 'value'}
+
+    with open(str(state_path), mode='wb') as f:
+        pickle.dump(legacy_state, f)
+
+    caplog.set_level(logging.WARNING)
+    es = ExecutionState.start(str(state_path))
+
+    assert es.datamap == {'legacy': 'value'}
+    assert "Pickle execution state files are deprecated" in caplog.text
 
 
 def test_safe_download_path_allows_plain_filename(tmp_path):

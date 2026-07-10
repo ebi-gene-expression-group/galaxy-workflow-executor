@@ -4,9 +4,11 @@ import time
 
 import os.path
 
+import builtins
 from collections.abc import Mapping
 import yaml
 import json
+import pickle
 
 
 def get_instance(conf, name='__default'):
@@ -563,6 +565,32 @@ class ExecutionState(object):
         }
 
     @staticmethod
+    def load_legacy_pickle(path):
+        class LegacyExecutionStateUnpickler(pickle.Unpickler):
+            def find_class(self, module, name):
+                if module == ExecutionState.__module__ and name == ExecutionState.__name__:
+                    return ExecutionState
+                if module == 'builtins' and name in ('set', 'frozenset'):
+                    return getattr(builtins, name)
+                raise pickle.UnpicklingError(
+                    "Unsupported class in legacy execution state: {}.{}".format(module, name)
+                )
+
+        try:
+            with open(path, mode='rb') as d:
+                es = LegacyExecutionStateUnpickler(d).load()
+            if type(es) is ExecutionState:
+                logging.warning(
+                    "Pickle execution state files are deprecated. "
+                    "Please allow the state file to be re-saved as JSON."
+                )
+                return es
+            logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
+        except Exception:
+            logging.warning("Could not read serialized file {}.".format(path))
+        return None
+
+    @staticmethod
     def start(path):
         if os.path.isfile(path):
             try:
@@ -571,7 +599,11 @@ class ExecutionState(object):
                 if isinstance(data, dict):
                     return ExecutionState.from_dict(path, data)
                 logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
-            except (OSError, json.JSONDecodeError, TypeError):
+            except (json.JSONDecodeError, TypeError, UnicodeDecodeError):
+                legacy_state = ExecutionState.load_legacy_pickle(path)
+                if legacy_state is not None:
+                    return legacy_state
+            except OSError:
                 logging.warning("Could not read serialized file {}.".format(path))
         return ExecutionState(path)
 
