@@ -4,6 +4,7 @@ import time
 
 import os.path
 
+import builtins
 from collections.abc import Mapping
 import yaml
 import json
@@ -73,6 +74,20 @@ def get_run_state(gi, results):
     return state
 
 
+def safe_download_path(output_dir, dataset_name):
+    """
+    Return a dataset download path constrained to output_dir.
+    """
+    output_dir_abs = os.path.abspath(output_dir)
+    safe_name = os.path.basename(dataset_name)
+    if safe_name in ('', os.curdir, os.pardir) or safe_name != dataset_name:
+        raise ValueError("Unsafe dataset name returned by Galaxy: {}".format(dataset_name))
+    download_path = os.path.abspath(os.path.join(output_dir_abs, safe_name))
+    if os.path.commonpath([output_dir_abs, download_path]) != output_dir_abs:
+        raise ValueError("Dataset download path escapes output directory: {}".format(dataset_name))
+    return download_path
+
+
 def download_results(gi, history_id, output_dir, allowed_error_states, use_names=False):
     """
     Downloads results from a given Galaxy instance and history to a specified filesystem location.
@@ -95,7 +110,7 @@ def download_results(gi, history_id, output_dir, allowed_error_states, use_names
                              .format(dataset['name']))
                 continue
             if use_names and dataset['name'] is not None and dataset['name'] not in used_names:
-                gi.datasets.download_dataset(dataset['id'], file_path=os.path.join(output_dir, dataset['name']),
+                gi.datasets.download_dataset(dataset['id'], file_path=safe_download_path(output_dir, dataset['name']),
                                              use_default_filename=False)
                 used_names.add(dataset['name'])
             else:
@@ -112,7 +127,7 @@ def download_results(gi, history_id, output_dir, allowed_error_states, use_names
                         and ds_in_coll['object']['name'] not in used_names:
                     # TODO it fails here to download if it is in 'error' state
                     gi.datasets.download_dataset(ds_in_coll['object']['id'],
-                                                 file_path=os.path.join(output_dir, ds_in_coll['object']['name']),
+                                                 file_path=safe_download_path(output_dir, ds_in_coll['object']['name']),
                                                  use_default_filename=False)
                     used_names.add(ds_in_coll['object']['name'])
                 else:
@@ -533,21 +548,66 @@ class ExecutionState(object):
     def __init__(self, path):
         self.path = path
 
+    @classmethod
+    def from_dict(cls, path, data):
+        es = cls(path)
+        for key in ('wf_from_file', 'datamap', 'params', 'results', 'input_history'):
+            setattr(es, key, data.get(key))
+        return es
+
+    def to_dict(self):
+        return {
+            'wf_from_file': self.wf_from_file,
+            'datamap': self.datamap,
+            'params': self.params,
+            'results': self.results,
+            'input_history': self.input_history,
+        }
+
+    @staticmethod
+    def load_legacy_pickle(path):
+        class LegacyExecutionStateUnpickler(pickle.Unpickler):
+            def find_class(self, module, name):
+                if module == ExecutionState.__module__ and name == ExecutionState.__name__:
+                    return ExecutionState
+                if module == 'builtins' and name in ('set', 'frozenset'):
+                    return getattr(builtins, name)
+                raise pickle.UnpicklingError(
+                    "Unsupported class in legacy execution state: {}.{}".format(module, name)
+                )
+
+        try:
+            with open(path, mode='rb') as d:
+                es = LegacyExecutionStateUnpickler(d).load()
+            if type(es) is ExecutionState:
+                logging.warning(
+                    "Pickle execution state files are deprecated. "
+                    "Please allow the state file to be re-saved as JSON."
+                )
+                return es
+            logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
+        except Exception:
+            logging.warning("Could not read serialized file {}.".format(path))
+        return None
+
     @staticmethod
     def start(path):
         if os.path.isfile(path):
             try:
-                with open(path, mode='rb') as d:
-                    es = pickle.load(d)
-                    if type(es) is ExecutionState:
-                        return es
-                    else:
-                        logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
-            except Exception:
+                with open(path) as d:
+                    data = json.load(d)
+                if isinstance(data, dict):
+                    return ExecutionState.from_dict(path, data)
+                logging.warning("The provided file {} does not have an ExecutionState object serialised".format(path))
+            except (json.JSONDecodeError, TypeError, UnicodeDecodeError):
+                legacy_state = ExecutionState.load_legacy_pickle(path)
+                if legacy_state is not None:
+                    return legacy_state
+            except OSError:
                 logging.warning("Could not read serialized file {}.".format(path))
         return ExecutionState(path)
 
     def save_state(self):
-        with open(self.path, mode='wb') as d:
-            pickle.dump(self, d)
+        with open(self.path, mode='w') as d:
+            json.dump(self.to_dict(), d)
             
