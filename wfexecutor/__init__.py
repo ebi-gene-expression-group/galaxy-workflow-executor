@@ -72,6 +72,20 @@ def get_run_state(gi, results):
     return state
 
 
+def safe_download_path(output_dir, dataset_name):
+    """
+    Return a dataset download path constrained to output_dir.
+    """
+    output_dir_abs = os.path.abspath(output_dir)
+    safe_name = os.path.basename(dataset_name)
+    if safe_name in ('', os.curdir, os.pardir) or safe_name != dataset_name:
+        raise ValueError("Unsafe dataset name returned by Galaxy: {}".format(dataset_name))
+    download_path = os.path.abspath(os.path.join(output_dir_abs, safe_name))
+    if os.path.commonpath([output_dir_abs, download_path]) != output_dir_abs:
+        raise ValueError("Dataset download path escapes output directory: {}".format(dataset_name))
+    return download_path
+
+
 def download_results(gi, history_id, output_dir, allowed_error_states, use_names=False):
     """
     Downloads results from a given Galaxy instance and history to a specified filesystem location.
@@ -94,7 +108,7 @@ def download_results(gi, history_id, output_dir, allowed_error_states, use_names
                              .format(dataset['name']))
                 continue
             if use_names and dataset['name'] is not None and dataset['name'] not in used_names:
-                gi.datasets.download_dataset(dataset['id'], file_path=os.path.join(output_dir, dataset['name']),
+                gi.datasets.download_dataset(dataset['id'], file_path=safe_download_path(output_dir, dataset['name']),
                                              use_default_filename=False)
                 used_names.add(dataset['name'])
             else:
@@ -111,7 +125,7 @@ def download_results(gi, history_id, output_dir, allowed_error_states, use_names
                         and ds_in_coll['object']['name'] not in used_names:
                     # TODO it fails here to download if it is in 'error' state
                     gi.datasets.download_dataset(ds_in_coll['object']['id'],
-                                                 file_path=os.path.join(output_dir, ds_in_coll['object']['name']),
+                                                 file_path=safe_download_path(output_dir, ds_in_coll['object']['name']),
                                                  use_default_filename=False)
                     used_names.add(ds_in_coll['object']['name'])
                 else:
